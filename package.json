@@ -22,7 +22,7 @@
     "start": "node ./app.js",
     "watch": "nodemon --exec ts-node src/app.js",
     "lint": "eslint --cache .",
-    "lint:fix": "eslint --fix .",
+    "lint:fix": "eslint --cache --fix .",
     "build": "rm -rf build && tsc && node ./generateAssets.js"
   },
   "dependencies": {
