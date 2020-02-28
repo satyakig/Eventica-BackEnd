@@ -22,7 +22,7 @@
     "types": ["node"],
     "typeRoots": ["node_modules/@types"],
     "paths": {
-      "*": ["node_modules/*", "src/types/*"]
+      "*": ["node_modules/*"]
     }
   },
   "include": ["src"]
