@@ -2,16 +2,14 @@
   "env": {
     "node": true
   },
-  "extends": ["eslint:recommended", "google", "prettier"],
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "google",
+    "prettier",
+    "prettier/@typescript-eslint"
+  ],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "prettier", "import"],
-  "parserOptions": {
-    "ecmaVersion": 2019,
-    "sourceType": "module",
-    "ecmaFeatures": {
-      "jsx": true
-    }
-  },
   "rules": {
     "prettier/prettier": "error",
     "no-useless-constructor": "off",
@@ -86,6 +84,9 @@
     "no-multiple-empty-lines": "error",
     "no-nested-ternary": "error",
     "require-jsdoc": "off",
-    "valid-jsdoc": "off"
+    "valid-jsdoc": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "new-cap": "off",
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }
