@@ -28,16 +28,7 @@ export const EVENT_CATEGORIES = [
 ];
 
 export function verifyEvent(event: any): any {
-  if (
-    !event.name ||
-    !event.start ||
-    !event.end ||
-    !event.address ||
-    !event.category ||
-    !event.fee ||
-    !event.photoURL ||
-    !event.desc
-  ) {
+  if (!event.name || !event.address || !event.category || !event.photoURL || !event.desc) {
     throw new Error('Invalid event format.');
   }
 
@@ -53,7 +44,7 @@ export function verifyEvent(event: any): any {
     throw new Error('Invalid event fee.');
   }
 
-  if (event.category.length === 0) {
+  if (event.category.length === 0 || !(event.category instanceof Array)) {
     throw new Error('Invalid event category.');
   }
 
@@ -69,7 +60,7 @@ export function verifyEvent(event: any): any {
     name: sanitizeString(event.name),
     start: Number(event.start),
     end: Number(event.end),
-    address: sanitizeString(event.name),
+    address: sanitizeString(event.address),
     category: event.category,
     fee: Number(event.fee),
     photoURL: sanitizeString(event.photoURL),

@@ -10,6 +10,8 @@ import isNumeric from 'validator/lib/isNumeric';
 export function sanitizeString(input: any): string {
   return String(input)
     .replace(/[^\x20-\x7E]/g, '')
+    .replace('undefined', '')
+    .replace('null', '')
     .trim();
 }
 
@@ -25,7 +27,7 @@ export async function isBodyInvalid(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  if (req.method === 'GET' || req.method === 'get') {
+  if (req.method === 'GET') {
     return next();
   }
 

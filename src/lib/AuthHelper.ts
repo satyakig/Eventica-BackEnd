@@ -45,13 +45,13 @@ export async function checkIfAuthorized(
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return next(httpErrors(401, `No auth header specified for request to ${req.url}`));
+    return next(httpErrors(401, 'No auth header provided.'));
   }
 
   const splitHeader = authHeader.split(' ');
 
   if (splitHeader.length == 1) {
-    return next(httpErrors(401, `No bearer token specified for request to ${req.url}`));
+    return next(httpErrors(401, 'No bearer token specified.'));
   }
 
   const authToken = splitHeader[1];
@@ -61,9 +61,7 @@ export async function checkIfAuthorized(
 
     return next();
   } catch (error) {
-    const errorMessage = `Failed to authenticate for ${authToken}, with error: ${error}`;
-    console.error(errorMessage);
-
-    return next(httpErrors(401, errorMessage));
+    console.error(error);
+    return next(httpErrors(401, error));
   }
 }

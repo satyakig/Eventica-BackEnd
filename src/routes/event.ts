@@ -11,9 +11,12 @@ import {
   setDocument,
   updateDocument,
 } from '../lib/DBHelper';
+import { sanitizeString } from '../lib/DataValidator';
+import { getDb } from '../lib/Firebase';
 
 const router = Router();
 
+// Create Event
 router.post(
   '/',
   asyncHandler(async (req, res, next) => {
@@ -26,6 +29,7 @@ router.post(
           const eid = doc.id;
           event['createdOn'] = moment().unix();
           event['status'] = EVENT_STATUS.ACTIVE;
+          event['eid'] = eid;
 
           const addEvent = setDocument(DB_PATHS.EVENTS, eid, event);
           const addUser = addToCollection(DB_PATHS.EVENT_USERS, {
@@ -48,15 +52,45 @@ router.post(
   }),
 );
 
+// Update Event
 router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
-    const eid = req.body.eid;
+    const eid = sanitizeString(req.body.eid);
+
+    if (!eid) {
+      return next(httpErrors(400, `Invalid event id: ${eid}.`));
+    }
 
     try {
       const event = await getDocument(DB_PATHS.EVENTS, eid);
       if (!event.exists) {
         return next(httpErrors(404, `Event ${eid} does not exist.`));
+      }
+    } catch (err) {
+      return next(httpErrors(500, err));
+    }
+
+    try {
+      const uid = await getUserFromRequest(req);
+      const eventUser = await getDb()
+        .collection(DB_PATHS.EVENT_USERS)
+        .where('eid', '==', eid)
+        .where('uid', '==', uid)
+        .get();
+
+      if (eventUser.docs.length !== 1) {
+        return next(
+          httpErrors(
+            400,
+            'Event could not be found or user does not have privileges to access this event.',
+          ),
+        );
+      }
+
+      const eventData = eventUser.docs[0].data();
+      if (eventData.status !== USER_EVENT_STATUS.HOST) {
+        return next(httpErrors(400, 'User does not have privileges to modify this event.'));
       }
     } catch (err) {
       return next(httpErrors(500, err));
@@ -78,10 +112,49 @@ router.patch(
   }),
 );
 
+// Delete Event
 router.delete(
   '/',
   asyncHandler(async (req, res, next) => {
-    const eid = req.body.eid;
+    const eid = sanitizeString(req.body.eid);
+
+    if (!eid) {
+      return next(httpErrors(400, `Invalid event id: ${eid}.`));
+    }
+
+    try {
+      const event = await getDocument(DB_PATHS.EVENTS, eid);
+      if (!event.exists) {
+        return next(httpErrors(404, `Event ${eid} does not exist.`));
+      }
+    } catch (err) {
+      return next(httpErrors(500, err));
+    }
+
+    try {
+      const uid = await getUserFromRequest(req);
+      const eventUser = await getDb()
+        .collection(DB_PATHS.EVENT_USERS)
+        .where('eid', '==', eid)
+        .where('uid', '==', uid)
+        .get();
+
+      if (eventUser.docs.length !== 1) {
+        return next(
+          httpErrors(
+            400,
+            'Event could not be found or user does not have privileges to access this event.',
+          ),
+        );
+      }
+
+      const eventData = eventUser.docs[0].data();
+      if (eventData.status !== USER_EVENT_STATUS.HOST) {
+        return next(httpErrors(400, 'User does not have privileges to modify this event.'));
+      }
+    } catch (err) {
+      return next(httpErrors(500, err));
+    }
 
     try {
       const event = await getDocument(DB_PATHS.EVENTS, eid);

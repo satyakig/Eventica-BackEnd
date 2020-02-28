@@ -14,15 +14,17 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('short'));
-app.use(isBodyInvalid);
 app.use(checkIfAuthorized);
+app.use(isBodyInvalid);
 
 initializeApp();
 
 app.use('/event', eventRoutes);
 
 app.use('/', (req, res, next) => {
-  return next(httpErrors(404, `The request '${req.method} ${req.path}' cannot be resolved.`));
+  return next(
+    httpErrors(404, `The ${req.method} request at '${req.path}' path cannot be resolved.`),
+  );
 });
 
 app.use((error, req, res, next) => {
