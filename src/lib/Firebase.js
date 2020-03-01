@@ -2,6 +2,10 @@ import admin from 'firebase-admin';
 
 let firebase;
 
+/**
+ * Initializes Firebase
+ */
+/* eslint-disable */
 export function initializeApp() {
   firebase = admin.initializeApp({
     credential: admin.credential.cert({
@@ -20,11 +24,20 @@ export function initializeApp() {
     }),
   });
 }
+/* eslint-enable */
 
+/**
+ * Returns the Firestore instance
+ * @returns {FirebaseFirestore.Firestore}
+ */
 export function getDb() {
   return firebase.firestore();
 }
 
+/**
+ * Returns the Firebase Auth instance
+ * @returns {admin.auth.Auth}
+ */
 export function getAuth() {
   return firebase.auth();
 }
