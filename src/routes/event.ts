@@ -16,7 +16,21 @@ import { getDb } from '../lib/Firebase';
 
 const router = Router();
 
-// Create Event
+/**
+ * Create Event
+ * Sample JSON POST
+ {
+    "name": "Event name 2",
+    "address": "address 2",
+    "category": ["Fashion", "Business"],
+    "photoURL": "url 2",
+    "desc": "description 2",
+    "start": 10,
+    "end": 1234567,
+    "fee": 10,
+    "type": 0
+ }
+ */
 router.post(
   '/',
   asyncHandler(async (req, res, next) => {
@@ -52,7 +66,23 @@ router.post(
   }),
 );
 
-// Update Event
+/**
+ * Update Event
+ * Sample JSON PATCH
+ {
+    "eid": "8UhyXDgfoBAJBboJkMQQ",
+    "name": "Event name 2",
+    "address": "address 2",
+    "category": ["Fashion", "Business"],
+    "photoURL": "url 2",
+    "desc": "description 2",
+    "start": 10,
+    "end": 1234567,
+    "fee": 10,
+    "status": 2,
+    "type": 1
+ }
+ */
 router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
@@ -125,7 +155,7 @@ router.delete(
     try {
       const event = await getDocument(DB_PATHS.EVENTS, eid);
       if (!event.exists) {
-        return next(httpErrors(404, `Event ${eid} does not exist.`));
+        return next(httpErrors(404, `Event with id: ${eid} does not exist.`));
       }
     } catch (err) {
       return next(httpErrors(500, err));
@@ -159,7 +189,7 @@ router.delete(
     try {
       const event = await getDocument(DB_PATHS.EVENTS, eid);
       if (!event.exists) {
-        return next(httpErrors(404, `Event ${eid} does not exist.`));
+        return next(httpErrors(404, `Event with id: ${eid} does not exist.`));
       }
     } catch (err) {
       return next(httpErrors(500, err));

@@ -6,6 +6,7 @@ export const DB_PATHS = {
   EVENT_USERS: 'event_users',
   EVENT_COMMENTS: 'event_comments',
   METADATA: 'metadata',
+  COMMENTS: 'comments',
 };
 
 /**

@@ -27,8 +27,40 @@ export const EVENT_CATEGORIES = [
   'Travel & Outdoor',
 ];
 
+export const EVENT_TYPE = {
+  PUBLIC: 0,
+  PRIVATE: 1,
+};
+
+const validModyableKeys = [
+  'name',
+  'address',
+  'category',
+  'photoURL',
+  'desc',
+  'start',
+  'end',
+  'fee',
+  'status',
+  'type',
+];
+
 export function verifyEvent(event: any): any {
-  if (!event.name || !event.address || !event.category || !event.photoURL || !event.desc) {
+  const newEvent: any = {};
+
+  for (const key of validModyableKeys) {
+    newEvent[key] = event[key];
+  }
+
+  if (
+    !newEvent.name ||
+    !newEvent.address ||
+    !newEvent.category ||
+    !newEvent.photoURL ||
+    !newEvent.desc ||
+    newEvent.type === null ||
+    newEvent.type === undefined
+  ) {
     throw new Error('Invalid event format.');
   }
 
@@ -56,14 +88,43 @@ export function verifyEvent(event: any): any {
     throw new Error('Invalid event category.');
   }
 
-  return {
-    name: sanitizeString(event.name),
-    start: Number(event.start),
-    end: Number(event.end),
-    address: sanitizeString(event.address),
-    category: event.category,
-    fee: Number(event.fee),
-    photoURL: sanitizeString(event.photoURL),
-    desc: sanitizeString(event.desc),
-  };
+  if (newEvent.status === null || newEvent.status === undefined) {
+    newEvent.status = EVENT_STATUS.ACTIVE;
+  }
+
+  if (!isNumber(newEvent.status)) {
+    throw new Error('Invalid event status.');
+  }
+
+  if (!isNumber(newEvent.type)) {
+    throw new Error('Invalid event type.');
+  }
+
+  if (newEvent.type !== EVENT_TYPE.PRIVATE && newEvent.type !== EVENT_TYPE.PUBLIC) {
+    throw new Error('Invalid event type.');
+  }
+
+  if (
+    newEvent.status !== EVENT_STATUS.ACTIVE &&
+    newEvent.status !== EVENT_STATUS.POSTPONED &&
+    newEvent.status !== EVENT_STATUS.CANCELLED
+  ) {
+    throw new Error('Invalid event status.');
+  }
+
+  if (!newEvent.photoURL.includes('https://')) {
+    throw new Error('Invalid photo url.');
+  }
+
+  newEvent.name = sanitizeString(newEvent.name);
+  newEvent.start = Number(newEvent.start);
+  newEvent.end = Number(newEvent.end);
+  newEvent.address = sanitizeString(newEvent.address);
+  newEvent.fee = Number(newEvent.fee);
+  newEvent.photoURL = sanitizeString(newEvent.photoURL);
+  newEvent.desc = sanitizeString(newEvent.desc);
+  newEvent.status = Number(newEvent.status);
+  newEvent.type = Number(newEvent.type);
+
+  return newEvent;
 }

@@ -20,7 +20,7 @@
   },
   "scripts": {
     "start": "node ./app.js",
-    "watch": "nodemon --exec ts-node src/app.js",
+    "watch": "nodemon src/app.ts",
     "lint": "eslint --cache .",
     "lint:fix": "eslint --cache --fix .",
     "build": "rm -rf build && tsc && node ./generateAssets.js"

@@ -1,12 +1,13 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
-import httpErrors from 'http-errors';
+import httpErrors, { HttpError } from 'http-errors';
 import cors from 'cors';
 import morgan from 'morgan';
 import { initializeApp } from './lib/Firebase';
 import { isBodyInvalid } from './lib/DataValidator';
 import { checkIfAuthorized } from './lib/AuthHelper';
 import { eventRoutes } from './routes/event';
+import { commentRoutes } from './routes/comment';
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(isBodyInvalid);
 initializeApp();
 
 app.use('/event', eventRoutes);
+app.use('/comment', commentRoutes);
 
 app.use('/', (req, res, next) => {
   return next(
@@ -27,7 +29,8 @@ app.use('/', (req, res, next) => {
   );
 });
 
-app.use((error, req, res, next) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
   return res.status(error.status).send(error.message);
 });
 
