@@ -60,7 +60,7 @@ router.post(
     try {
       const comment = verifyComment(req.body);
 
-      return addToCollection(DB_PATHS.COMMENTS, {})
+      return addToCollection(DB_PATHS.EVENT_COMMENTS, comment)
         .then((doc) => {
           const cid = doc.id;
           const now = moment().valueOf();
@@ -75,7 +75,7 @@ router.post(
             profile: user.photoURL,
           };
 
-          return setDocument(DB_PATHS.COMMENTS, cid, comment);
+          return setDocument(DB_PATHS.EVENT_COMMENTS, cid, comment);
         })
         .then(() => {
           return res.status(200).send('Comment has been posted.');
@@ -139,7 +139,7 @@ router.patch(
     }
 
     try {
-      const comment = await getDocument(DB_PATHS.COMMENTS, cid);
+      const comment = await getDocument(DB_PATHS.EVENT_COMMENTS, cid);
       if (!comment.exists) {
         return next(httpErrors(404, 'The comment specified does not exist.'));
       }
@@ -151,7 +151,7 @@ router.patch(
       const comment = verifyComment(req.body);
       comment['lastUpdated'] = moment().valueOf();
 
-      return updateDocument(DB_PATHS.COMMENTS, cid, comment)
+      return updateDocument(DB_PATHS.EVENT_COMMENTS, cid, comment)
         .then(() => {
           return res.status(200).send('Comment has been updated.');
         })
