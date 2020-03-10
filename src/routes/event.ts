@@ -131,7 +131,13 @@ router.patch(
   }),
 );
 
-// Delete Event
+/**
+ * Delete Event
+ * Sample JSON PATCH
+ {
+    "eid": "8UhyXDgfoBAJBboJkMQQ"
+ }
+ */
 router.delete(
   '/',
   asyncHandler(async (req, res, next) => {
