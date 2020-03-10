@@ -4,13 +4,7 @@ import { Router } from 'express';
 import moment from 'moment';
 import { getUserFromRequest } from '../lib/AuthHelper';
 import { EVENT_STATUS, USER_EVENT_STATUS, verifyEvent } from '../lib/EventHelper';
-import {
-  addToCollection,
-  DB_PATHS,
-  getDocument,
-  setDocument,
-  updateDocument,
-} from '../lib/DBHelper';
+import { addToCollection, DB_PATHS, setDocument, updateDocument } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
 import { getDb } from '../lib/Firebase';
 
@@ -36,7 +30,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     try {
       const event = verifyEvent(req.body);
-      const uid = await getUserFromRequest(req);
+      const user = await getUserFromRequest(req);
 
       return addToCollection(DB_PATHS.EVENTS, {})
         .then((doc) => {
@@ -48,19 +42,21 @@ router.post(
           const addEvent = setDocument(DB_PATHS.EVENTS, eid, event);
           const addUser = addToCollection(DB_PATHS.EVENT_USERS, {
             eid,
-            uid,
+            uid: user.uid,
             status: USER_EVENT_STATUS.HOST,
           });
 
           return Promise.all([addEvent, addUser]);
         })
         .then(() => {
-          return res.status(200).send('Created new event.');
+          return res.status(200).send('Event has been created.');
         })
         .catch((err) => {
+          console.error(err);
           return next(httpErrors(500, err));
         });
     } catch (err) {
+      console.error(err);
       return next(httpErrors(400, err));
     }
   }),
@@ -89,24 +85,15 @@ router.patch(
     const eid = sanitizeString(req.body.eid);
 
     if (!eid) {
-      return next(httpErrors(400, `Invalid event id: ${eid}.`));
+      return next(httpErrors(400, 'Invalid event id provided.'));
     }
 
     try {
-      const event = await getDocument(DB_PATHS.EVENTS, eid);
-      if (!event.exists) {
-        return next(httpErrors(404, `Event ${eid} does not exist.`));
-      }
-    } catch (err) {
-      return next(httpErrors(500, err));
-    }
-
-    try {
-      const uid = await getUserFromRequest(req);
+      const user = await getUserFromRequest(req);
       const eventUser = await getDb()
         .collection(DB_PATHS.EVENT_USERS)
         .where('eid', '==', eid)
-        .where('uid', '==', uid)
+        .where('uid', '==', user.uid)
         .get();
 
       if (eventUser.docs.length !== 1) {
@@ -123,20 +110,22 @@ router.patch(
         return next(httpErrors(400, 'User does not have privileges to modify this event.'));
       }
     } catch (err) {
+      console.error(err);
       return next(httpErrors(500, err));
     }
 
     try {
       const event = verifyEvent(req.body);
-
       return updateDocument(DB_PATHS.EVENTS, eid, event)
         .then(() => {
-          return res.status(200).send('Updated event.');
+          return res.status(200).send('Event has been updated.');
         })
         .catch((err) => {
+          console.error(err);
           return next(httpErrors(500, err));
         });
     } catch (err) {
+      console.error(err);
       return next(httpErrors(400, err));
     }
   }),
@@ -149,24 +138,15 @@ router.delete(
     const eid = sanitizeString(req.body.eid);
 
     if (!eid) {
-      return next(httpErrors(400, `Invalid event id: ${eid}.`));
+      return next(httpErrors(400, 'Invalid event id provided.'));
     }
 
     try {
-      const event = await getDocument(DB_PATHS.EVENTS, eid);
-      if (!event.exists) {
-        return next(httpErrors(404, `Event with id: ${eid} does not exist.`));
-      }
-    } catch (err) {
-      return next(httpErrors(500, err));
-    }
-
-    try {
-      const uid = await getUserFromRequest(req);
+      const user = await getUserFromRequest(req);
       const eventUser = await getDb()
         .collection(DB_PATHS.EVENT_USERS)
         .where('eid', '==', eid)
-        .where('uid', '==', uid)
+        .where('uid', '==', user.uid)
         .get();
 
       if (eventUser.docs.length !== 1) {
@@ -183,15 +163,7 @@ router.delete(
         return next(httpErrors(400, 'User does not have privileges to modify this event.'));
       }
     } catch (err) {
-      return next(httpErrors(500, err));
-    }
-
-    try {
-      const event = await getDocument(DB_PATHS.EVENTS, eid);
-      if (!event.exists) {
-        return next(httpErrors(404, `Event with id: ${eid} does not exist.`));
-      }
-    } catch (err) {
+      console.error(err);
       return next(httpErrors(500, err));
     }
 
@@ -199,9 +171,10 @@ router.delete(
       status: EVENT_STATUS.CANCELLED,
     })
       .then(() => {
-        return res.status(200).send('Cancelled event.');
+        return res.status(200).send('Event has been cancelled.');
       })
       .catch((err) => {
+        console.error(err);
         return next(httpErrors(500, err));
       });
   }),

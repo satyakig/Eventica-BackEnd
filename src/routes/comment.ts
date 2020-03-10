@@ -31,16 +31,12 @@ router.post(
     const eid = sanitizeString(req.body.eid);
 
     if (!eid) {
-      return next(httpErrors(400, `Invalid event id: ${eid}.`));
+      return next(httpErrors(400, 'Invalid event id provided.'));
     }
 
     let user: any;
     try {
       user = await getUserFromRequest(req);
-
-      if (!user) {
-        return next(httpErrors(404, 'User could not be found'));
-      }
 
       const eventUser = await getDb()
         .collection(DB_PATHS.EVENT_USERS)
@@ -62,26 +58,13 @@ router.post(
     }
 
     try {
-      const event = await getDocument(DB_PATHS.EVENTS, eid);
-      if (!event.exists) {
-        return next(httpErrors(404, `Event with id: ${eid} does not exist.`));
-      }
-    } catch (err) {
-      console.error(err);
-      return next(httpErrors(500, err));
-    }
-
-    try {
       const comment = verifyComment(req.body);
-
-      if (!user) {
-        return next(httpErrors(404, 'User could not be found'));
-      }
 
       return addToCollection(DB_PATHS.COMMENTS, {})
         .then((doc) => {
           const cid = doc.id;
           const now = moment().valueOf();
+
           comment['createdOn'] = now;
           comment['lastUpdated'] = now;
           comment['eid'] = eid;
@@ -95,7 +78,7 @@ router.post(
           return setDocument(DB_PATHS.COMMENTS, cid, comment);
         })
         .then(() => {
-          return res.status(200).send('Uploaded new comment.');
+          return res.status(200).send('Comment has been posted.');
         })
         .catch((err) => {
           console.error(err);
@@ -125,19 +108,16 @@ router.patch(
     const cid = sanitizeString(req.body.cid);
 
     if (!eid) {
-      return next(httpErrors(400, `Invalid event id: ${eid}.`));
+      return next(httpErrors(400, 'Invalid event id provided.'));
     }
 
     if (!cid) {
-      return next(httpErrors(400, `Invalid comment id: ${cid}.`));
+      return next(httpErrors(400, 'Invalid comment id provided.'));
     }
 
+    let user: any;
     try {
-      const user = await getUserFromRequest(req);
-
-      if (!user) {
-        return next(httpErrors(404, 'User could not be found'));
-      }
+      user = await getUserFromRequest(req);
 
       const eventUser = await getDb()
         .collection(DB_PATHS.EVENT_USERS)
@@ -154,22 +134,14 @@ router.patch(
         );
       }
     } catch (err) {
-      return next(httpErrors(500, err));
-    }
-
-    try {
-      const event = await getDocument(DB_PATHS.EVENTS, eid);
-      if (!event.exists) {
-        return next(httpErrors(404, `Event with id: ${eid} does not exist.`));
-      }
-    } catch (err) {
+      console.error(err);
       return next(httpErrors(500, err));
     }
 
     try {
       const comment = await getDocument(DB_PATHS.COMMENTS, cid);
       if (!comment.exists) {
-        return next(httpErrors(404, `Comment with id: ${cid} does not exist.`));
+        return next(httpErrors(404, 'The comment specified does not exist.'));
       }
     } catch (err) {
       return next(httpErrors(500, err));
@@ -181,7 +153,7 @@ router.patch(
 
       return updateDocument(DB_PATHS.COMMENTS, cid, comment)
         .then(() => {
-          return res.status(200).send('Updated comment.');
+          return res.status(200).send('Comment has been updated.');
         })
         .catch((err) => {
           return next(httpErrors(500, err));

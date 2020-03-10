@@ -1,15 +1,32 @@
 import { NextFunction, Request, Response } from 'express';
 import httpErrors from 'http-errors';
-import admin from 'firebase-admin';
 import { getAuth } from './Firebase';
+import { DB_PATHS, getDocument } from './DBHelper';
 
 /**
  * Gets the id of the user from the provided email address
  * @param { string } email User's email
  * @returns User's record if there ares any
  */
-export function getUserRecordByEmail(email: string): Promise<admin.auth.UserRecord> {
-  return getAuth().getUserByEmail(email);
+export function getUserRecordByEmail(email: string): Promise<FirebaseFirestore.DocumentData> {
+  return getAuth()
+    .getUserByEmail(email)
+    .then((user) => {
+      return getDocument(DB_PATHS.USERS, user.uid);
+    })
+    .then((doc) => {
+      if (!doc.exists) {
+        throw new Error('User account could not be found.');
+      }
+
+      const data = doc.data();
+
+      if (!data) {
+        throw new Error('User account could not be found.');
+      }
+
+      return data;
+    });
 }
 
 /**
@@ -17,16 +34,31 @@ export function getUserRecordByEmail(email: string): Promise<admin.auth.UserReco
  * @param uid - UID provided to this endpoint, representing the UID of a user in Firebase auth (ideally)
  * @returns Promise - Returns a promise containing the user record associated with the provided uid
  */
-export function getUser(uid: string): Promise<admin.auth.UserRecord> {
-  return getAuth().getUser(uid);
+export function getUser(uid: string): Promise<FirebaseFirestore.DocumentData> {
+  return getAuth()
+    .getUser(uid)
+    .then((user) => {
+      return getDocument(DB_PATHS.USERS, user.uid);
+    })
+    .then((doc) => {
+      if (!doc.exists) {
+        throw new Error('User account could not be found.');
+      }
+
+      const data = doc.data();
+
+      if (!data) {
+        throw new Error('User account could not be found.');
+      }
+
+      return data;
+    });
 }
 
-export function getUserFromRequest(req: any): Promise<string> {
+export function getUserFromRequest(req: any): Promise<FirebaseFirestore.DocumentData> {
   const uid = req.headers.authorization.split(' ')[1];
 
-  return getUser(uid).then((user) => {
-    return user.uid;
-  });
+  return getUser(uid);
 }
 
 /**
@@ -51,13 +83,11 @@ export async function checkIfAuthorized(
   const splitHeader = authHeader.split(' ');
 
   if (splitHeader.length == 1) {
-    return next(httpErrors(401, 'No bearer token specified.'));
+    return next(httpErrors(401, 'No bearer token provided.'));
   }
 
-  const authToken = splitHeader[1];
-
   try {
-    await getUser(authToken);
+    await getUserFromRequest(req);
 
     return next();
   } catch (error) {
