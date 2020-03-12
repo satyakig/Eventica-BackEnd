@@ -7,11 +7,9 @@ export function verifyStatus(status: any): any {
   }
 
   if (
-    status !== USER_EVENT_STATUS.HOST &&
     status !== USER_EVENT_STATUS.ATTENDING &&
     status !== USER_EVENT_STATUS.MAYBE &&
-    status !== USER_EVENT_STATUS.NO &&
-    status !== USER_EVENT_STATUS.INVITED
+    status !== USER_EVENT_STATUS.NO
   ) {
     throw new Error('Not a valid status type');
   }
