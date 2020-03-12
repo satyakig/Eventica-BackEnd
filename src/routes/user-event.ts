@@ -3,9 +3,10 @@ import httpErrors from 'http-errors';
 import { Router } from 'express';
 import { getUserFromRequest } from '../lib/AuthHelper';
 import { addToCollection, DB_PATHS, updateDocument } from '../lib/DBHelper';
-import { sanitizeString } from '../lib/DataValidator';
 import { getDb } from '../lib/Firebase';
 import { EVENT_STATUS } from '../lib/EventHelper';
+import { verifyStatus } from '../lib/UserEventHelper';
+import { sanitizeString } from '../lib/DataValidator';
 
 const router = Router();
 
@@ -14,8 +15,7 @@ const router = Router();
  * Sample JSON POST
  {
     "eid": "8UhyXDgfoBAJBboJkMQQ",
-    "uid": "42fdsGW3teCAwwoJkMQQ"
-    "status": (0, 1, 2) 0 = Yes, 1 = No, 2 = Maybe
+    "status": Use the USER_EVENT_STATUS from EventHelper.ts
  }
  */
 router.post(
@@ -23,7 +23,15 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const user = await getUserFromRequest(req);
     const eid = sanitizeString(req.body.eid);
-    const status = sanitizeString(req.body.status);
+
+    // Check if event status is valid
+    let status: any;
+    try {
+      status = verifyStatus(req.body.status);
+    } catch (err) {
+      console.error(err);
+      return next(httpErrors(400, err));
+    }
 
     // Get Event from the DB
     let event: any;
@@ -53,7 +61,7 @@ router.post(
       eventUser = await getDb()
         .collection(DB_PATHS.EVENT_USERS)
         .where('eid', '==', eid)
-        .where('uid', '==', user)
+        .where('uid', '==', user.uid)
         .get();
     } catch (err) {
       console.error(err);
@@ -79,7 +87,7 @@ router.post(
       else {
         return addToCollection(DB_PATHS.EVENT_USERS, {
           eid,
-          user,
+          uid: user.id,
           status,
         })
           .then(() => {
