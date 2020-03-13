@@ -44,7 +44,7 @@ router.post(
         .where('uid', '==', user.uid)
         .get();
 
-      if (eventUser.docs.length !== 1) {
+      if (eventUser.docs.length < 1) {
         return next(
           httpErrors(
             400,

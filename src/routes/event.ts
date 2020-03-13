@@ -3,7 +3,12 @@ import httpErrors from 'http-errors';
 import { Router } from 'express';
 import moment from 'moment';
 import { getUserFromRequest } from '../lib/AuthHelper';
-import { EVENT_STATUS, USER_EVENT_STATUS, verifyEvent } from '../lib/EventHelper';
+import {
+  checkEventCapacity,
+  EVENT_STATUS,
+  USER_EVENT_STATUS,
+  verifyEvent,
+} from '../lib/EventHelper';
 import { addToCollection, DB_PATHS, setDocument, updateDocument } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
 import { getDb } from '../lib/Firebase';
@@ -22,7 +27,8 @@ const router = Router();
     "start": 10,
     "end": 1234567,
     "fee": 10,
-    "type": 0
+    "type": 0,
+    "capacity": 10
  }
  */
 router.post(
@@ -38,6 +44,10 @@ router.post(
           event['createdOn'] = moment().unix();
           event['status'] = EVENT_STATUS.ACTIVE;
           event['eid'] = eid;
+          event['createdBy'] = {
+            email: user.email,
+            name: user.name,
+          };
 
           const addEvent = setDocument(DB_PATHS.EVENTS, eid, event);
           const addUser = addToCollection(DB_PATHS.EVENT_USERS, {
@@ -76,7 +86,8 @@ router.post(
     "end": 1234567,
     "fee": 10,
     "status": 2,
-    "type": 1
+    "type": 1,
+    "capacity": 10
  }
  */
 router.patch(
@@ -94,20 +105,16 @@ router.patch(
         .collection(DB_PATHS.EVENT_USERS)
         .where('eid', '==', eid)
         .where('uid', '==', user.uid)
+        .where('status', '==', USER_EVENT_STATUS.HOST)
         .get();
 
       if (eventUser.docs.length !== 1) {
         return next(
           httpErrors(
             400,
-            'Event could not be found or user does not have privileges to access this event.',
+            'Event could not be found or user does not have privileges to modify this event.',
           ),
         );
-      }
-
-      const eventData = eventUser.docs[0].data();
-      if (eventData.status !== USER_EVENT_STATUS.HOST) {
-        return next(httpErrors(400, 'User does not have privileges to modify this event.'));
       }
     } catch (err) {
       console.error(err);
@@ -116,6 +123,14 @@ router.patch(
 
     try {
       const event = verifyEvent(req.body);
+
+      try {
+        await checkEventCapacity(eid, event.capacity);
+      } catch (err) {
+        console.error(err);
+        return next(httpErrors(400, err));
+      }
+
       return updateDocument(DB_PATHS.EVENTS, eid, event)
         .then(() => {
           return res.status(200).send('Event has been updated.');

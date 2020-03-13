@@ -4,8 +4,8 @@ import { Router } from 'express';
 import { getUserFromRequest } from '../lib/AuthHelper';
 import { addToCollection, DB_PATHS, updateDocument } from '../lib/DBHelper';
 import { getDb } from '../lib/Firebase';
-import { EVENT_STATUS } from '../lib/EventHelper';
-import { verifyStatus } from '../lib/UserEventHelper';
+import { EVENT_STATUS, USER_EVENT_STATUS } from '../lib/EventHelper';
+import { getStringFromStatus, verifyEventCapacity, verifyStatus } from '../lib/UserEventHelper';
 import { sanitizeString } from '../lib/DataValidator';
 
 const router = Router();
@@ -28,6 +28,7 @@ router.post(
     let status: any;
     try {
       status = verifyStatus(req.body.status);
+      status = Number(status);
     } catch (err) {
       console.error(err);
       return next(httpErrors(400, err));
@@ -68,6 +69,15 @@ router.post(
       return next(httpErrors(500, err));
     }
 
+    if (status === USER_EVENT_STATUS.ATTENDING) {
+      try {
+        await verifyEventCapacity(eid);
+      } catch (err) {
+        console.error(err);
+        return next(httpErrors(400, err));
+      }
+    }
+
     // Create or update eventUser element
     try {
       // If the user already has an entry
@@ -76,7 +86,9 @@ router.post(
           status,
         })
           .then(() => {
-            return res.status(200).send('User Event has been updated.');
+            return res
+              .status(200)
+              .send(`You have RSVPed to the event with: ${getStringFromStatus(status)}`);
           })
           .catch((err) => {
             console.error(err);
@@ -91,7 +103,9 @@ router.post(
           status,
         })
           .then(() => {
-            return res.status(200).send('User Event has been created.');
+            return res
+              .status(200)
+              .send(`You have RSVPed to the event with: ${getStringFromStatus(status)}`);
           })
           .catch((err) => {
             console.error(err);

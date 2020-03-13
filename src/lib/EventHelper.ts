@@ -1,4 +1,6 @@
 import { isNumber, sanitizeString } from './DataValidator';
+import { getDb } from './Firebase';
+import { DB_PATHS } from './DBHelper';
 
 export const USER_EVENT_STATUS = { HOST: 0, ATTENDING: 1, MAYBE: 2, NO: 3, INVITED: 4 };
 
@@ -43,6 +45,7 @@ const validModyableKeys = [
   'fee',
   'status',
   'type',
+  'capacity',
 ];
 
 export function verifyEvent(event: any): any {
@@ -100,6 +103,10 @@ export function verifyEvent(event: any): any {
     throw new Error('Invalid event type.');
   }
 
+  if (!isNumber(newEvent.capacity)) {
+    throw new Error('Invalid capacity type.');
+  }
+
   if (newEvent.type !== EVENT_TYPE.PRIVATE && newEvent.type !== EVENT_TYPE.PUBLIC) {
     throw new Error('Invalid event type.');
   }
@@ -125,6 +132,39 @@ export function verifyEvent(event: any): any {
   newEvent.desc = sanitizeString(newEvent.desc);
   newEvent.status = Number(newEvent.status);
   newEvent.type = Number(newEvent.type);
+  newEvent.capacity = Number(newEvent.capacity);
+
+  if (newEvent.capacity < 1) {
+    throw new Error('Event capacity must be greater than 0.');
+  }
+
+  if (newEvent.end < newEvent.start) {
+    throw new Error('Event cannot end before it starts.');
+  }
 
   return newEvent;
+}
+
+export async function checkEventCapacity(eid: string, capacity: number) {
+  const event = await getDb()
+    .collection(DB_PATHS.EVENTS)
+    .doc(eid)
+    .get()
+    .then((doc) => {
+      return doc.data();
+    });
+
+  if (!event) {
+    throw new Error('Event data not found.');
+  }
+
+  const attendees = await getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .where('eid', '==', eid)
+    .where('status', '==', USER_EVENT_STATUS.ATTENDING)
+    .get();
+
+  if (capacity < attendees.docs.length) {
+    throw new Error('Capacity is too low, attendees have already RSVPed to the event.');
+  }
 }
