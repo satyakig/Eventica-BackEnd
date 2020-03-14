@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import httpErrors from 'http-errors';
 import isNumeric from 'validator/lib/isNumeric';
+import isMobilePhone from 'validator/lib/isMobilePhone';
 
 /**
  * Sanitizes a string by removing all control characters in the ASCII set
@@ -57,4 +58,12 @@ export function isNumber(input: any): boolean {
   const numNum = Number(numString);
 
   return isNumeric(numString) && !Number.isNaN(numNum) && Number.isFinite(numNum);
+}
+
+/**
+ * @param {string} input
+ * @returns {boolean} Whether the input is a valid canadian mobile number
+ */
+export function isMobile(input: string): boolean {
+  return isMobilePhone(input, 'en-CA');
 }

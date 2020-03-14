@@ -9,6 +9,7 @@ import { checkIfAuthorized } from './lib/AuthHelper';
 import { eventRoutes } from './routes/event';
 import { commentRoutes } from './routes/comment';
 import { userEventRoutes } from './routes/user-event';
+import { userRoutes } from './routes/user';
 
 const app = express();
 
@@ -23,7 +24,8 @@ initializeApp();
 
 app.use('/event', eventRoutes);
 app.use('/comment', commentRoutes);
-app.use('/user_event', userEventRoutes);
+app.use('/user-event', userEventRoutes);
+app.use('/user', userRoutes);
 
 app.use('/', (req, res, next) => {
   return next(

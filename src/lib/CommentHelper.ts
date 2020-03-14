@@ -20,6 +20,9 @@ export function verifyComment(comment: any): any {
   }
 
   newComment.message = sanitizeString(newComment.message);
+  if (newComment.photoURL) {
+    newComment.photoURL = sanitizeString(newComment.photoURL);
+  }
 
   return newComment;
 }
