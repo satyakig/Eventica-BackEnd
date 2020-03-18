@@ -99,7 +99,7 @@ router.post(
       else {
         return addToCollection(DB_PATHS.EVENT_USERS, {
           eid,
-          uid: user.id,
+          uid: user.uid,
           status,
         })
           .then(() => {
