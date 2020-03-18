@@ -142,6 +142,10 @@ export function verifyEvent(event: any): any {
     throw new Error('Event cannot end before it starts.');
   }
 
+  if (newEvent.fee < 0) {
+    throw new Error('Event fee cannot be less than $0.');
+  }
+
   return newEvent;
 }
 
