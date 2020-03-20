@@ -8,5 +8,6 @@ export function sendNotification(user: any, success: boolean, title: string, mes
     title,
     message,
     timestamp: moment().valueOf(),
+    seen: false,
   });
 }

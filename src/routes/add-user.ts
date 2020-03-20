@@ -7,6 +7,7 @@ import { sanitizeString } from '../lib/DataValidator';
 import { getDb } from '../lib/Firebase';
 import { USER_EVENT_STATUS, validateHost } from '../lib/EventHelper';
 import { sendNotification } from '../lib/NotificationHelper';
+import { getEventData } from '../lib/UserEventHelper';
 
 const router = Router();
 
@@ -26,8 +27,10 @@ router.post(
     const eid = sanitizeString(req.body.eid);
     const user = await getUserFromRequest(req);
 
+    let event: any;
     try {
       await validateHost(eid, user);
+      event = await getEventData(eid);
     } catch (err) {
       respMessage = err;
       sendNotification(user, false, respTitle, respMessage);
@@ -64,6 +67,13 @@ router.post(
         name: userInfo.name,
         photoURL: userInfo.photoURL,
       });
+
+      sendNotification(
+        userInfo,
+        true,
+        'Event Invite',
+        `You have been invited to join ${event.name}.`,
+      );
 
       newDocs++;
     }
