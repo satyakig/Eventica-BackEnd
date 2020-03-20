@@ -41,7 +41,10 @@ router.post(
       return addToCollection(DB_PATHS.EVENTS, {})
         .then((doc) => {
           const eid = doc.id;
-          event['createdOn'] = moment().unix();
+
+          const now = moment().unix();
+          event['createdOn'] = now;
+          event['lastUpdated'] = now;
           event['status'] = EVENT_STATUS.ACTIVE;
           event['eid'] = eid;
           event['createdBy'] = {
@@ -62,11 +65,9 @@ router.post(
           return res.status(200).send('Event has been created.');
         })
         .catch((err) => {
-          console.error(err);
           return next(httpErrors(500, err));
         });
     } catch (err) {
-      console.error(err);
       return next(httpErrors(400, err));
     }
   }),
@@ -109,25 +110,19 @@ router.patch(
         .get();
 
       if (eventUser.docs.length !== 1) {
-        return next(
-          httpErrors(
-            400,
-            'Event could not be found or user does not have privileges to modify this event.',
-          ),
-        );
+        return next(httpErrors(400, 'User does not have privileges to modify this event.'));
       }
     } catch (err) {
-      console.error(err);
       return next(httpErrors(500, err));
     }
 
     try {
       const event = verifyEvent(req.body);
+      event['lastUpdated'] = moment().unix();
 
       try {
         await checkEventCapacity(eid, event.capacity);
       } catch (err) {
-        console.error(err);
         return next(httpErrors(400, err));
       }
 
@@ -136,11 +131,9 @@ router.patch(
           return res.status(200).send('Event has been updated.');
         })
         .catch((err) => {
-          console.error(err);
           return next(httpErrors(500, err));
         });
     } catch (err) {
-      console.error(err);
       return next(httpErrors(400, err));
     }
   }),
@@ -168,34 +161,24 @@ router.delete(
         .collection(DB_PATHS.EVENT_USERS)
         .where('eid', '==', eid)
         .where('uid', '==', user.uid)
+        .where('status', '==', USER_EVENT_STATUS.HOST)
         .get();
 
       if (eventUser.docs.length !== 1) {
-        return next(
-          httpErrors(
-            400,
-            'Event could not be found or user does not have privileges to access this event.',
-          ),
-        );
-      }
-
-      const eventData = eventUser.docs[0].data();
-      if (eventData.status !== USER_EVENT_STATUS.HOST) {
         return next(httpErrors(400, 'User does not have privileges to modify this event.'));
       }
     } catch (err) {
-      console.error(err);
       return next(httpErrors(500, err));
     }
 
     return updateDocument(DB_PATHS.EVENTS, eid, {
       status: EVENT_STATUS.CANCELLED,
+      lastUpdated: moment().unix(),
     })
       .then(() => {
         return res.status(200).send('Event has been cancelled.');
       })
       .catch((err) => {
-        console.error(err);
         return next(httpErrors(500, err));
       });
   }),

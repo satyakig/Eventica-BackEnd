@@ -53,7 +53,6 @@ router.post(
         );
       }
     } catch (err) {
-      console.error(err);
       return next(httpErrors(500, err));
     }
 
@@ -81,11 +80,9 @@ router.post(
           return res.status(200).send('Comment has been posted.');
         })
         .catch((err) => {
-          console.error(err);
           return next(httpErrors(500, err));
         });
     } catch (err) {
-      console.error(err);
       return next(httpErrors(400, err));
     }
   }),
@@ -134,14 +131,13 @@ router.patch(
         );
       }
     } catch (err) {
-      console.error(err);
       return next(httpErrors(500, err));
     }
 
     try {
       const comment = await getDocument(DB_PATHS.EVENT_COMMENTS, cid);
       if (!comment.exists) {
-        return next(httpErrors(404, 'The comment specified does not exist.'));
+        return next(httpErrors(400, 'The comment specified does not exist.'));
       }
     } catch (err) {
       return next(httpErrors(500, err));

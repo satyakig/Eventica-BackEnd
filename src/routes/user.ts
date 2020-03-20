@@ -5,8 +5,50 @@ import * as lodash from 'lodash';
 import { getUserFromRequest } from '../lib/AuthHelper';
 import { DB_PATHS, updateDocument } from '../lib/DBHelper';
 import { isMobile, sanitizeString } from '../lib/DataValidator';
+import { getDb } from '../lib/Firebase';
 
 const router = Router();
+
+function eventsHosted(user: any) {
+  getDb()
+    .collection(DB_PATHS.EVENTS)
+    .where('createdBy.email', '==', user.email)
+    .get()
+    .then((snapshot) => {
+      for (const doc of snapshot.docs) {
+        getDb()
+          .collection(DB_PATHS.EVENTS)
+          .doc(doc.id)
+          .update({
+            createdBy: {
+              email: user.email,
+              name: user.name,
+            },
+          });
+      }
+    });
+}
+
+function commentsMade(user: any) {
+  getDb()
+    .collection(DB_PATHS.EVENT_COMMENTS)
+    .where('createdBy.email', '==', user.email)
+    .get()
+    .then((snapshot) => {
+      for (const doc of snapshot.docs) {
+        getDb()
+          .collection(DB_PATHS.EVENT_COMMENTS)
+          .doc(doc.id)
+          .update({
+            createdBy: {
+              email: user.email,
+              name: user.name,
+              profile: user.photoURL,
+            },
+          });
+      }
+    });
+}
 
 /**
  * Update user
@@ -21,6 +63,10 @@ router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
     const user = await getUserFromRequest(req);
+
+    if (!user.email) {
+      return next(httpErrors(400, 'Invalid user email.'));
+    }
 
     const phone = sanitizeString(req.body.phone);
     const name = lodash.startCase(sanitizeString(req.body.name).toLowerCase());
@@ -38,6 +84,13 @@ router.patch(
       return next(httpErrors(400, 'Invalid photo url.'));
     }
 
+    user.name = name;
+    user.phone = phone;
+    user.photoURL = photoURL;
+
+    eventsHosted(user);
+    commentsMade(user);
+
     return updateDocument(DB_PATHS.USERS, user.uid, {
       name,
       photoURL,
@@ -47,7 +100,6 @@ router.patch(
         return res.status(200).send('Your account information has been updated.');
       })
       .catch((err) => {
-        console.error(err);
         return next(httpErrors(500, err));
       });
   }),

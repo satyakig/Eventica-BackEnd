@@ -10,13 +10,16 @@ import { eventRoutes } from './routes/event';
 import { commentRoutes } from './routes/comment';
 import { userEventRoutes } from './routes/user-event';
 import { userRoutes } from './routes/user';
+import { addUserRoutes } from './routes/add-user';
+import { LOGGER } from './lib/Logger';
 
 const app = express();
+
+app.use(morgan('short'));
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(morgan('short'));
 app.use(checkIfAuthorized);
 app.use(isBodyInvalid);
 
@@ -26,6 +29,7 @@ app.use('/event', eventRoutes);
 app.use('/comment', commentRoutes);
 app.use('/user-event', userEventRoutes);
 app.use('/user', userRoutes);
+app.use('/add-user', addUserRoutes);
 
 app.use('/', (req, res, next) => {
   return next(
@@ -35,12 +39,29 @@ app.use('/', (req, res, next) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
+  LOGGER.error({
+    method: req.method,
+    url: req.path,
+    auth: req.headers['authorization'],
+    body: req.body,
+    error,
+  });
+
+  if (
+    error.status !== 404 &&
+    error.status !== 400 &&
+    error.status !== 401 &&
+    error.status !== 500
+  ) {
+    return res.status(500).send(error.message);
+  }
+
   return res.status(error.status).send(error.message);
 });
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.debug(`Server started at http://localhost:${PORT}`);
+  LOGGER.debug(`Server started at http://localhost:${PORT}`);
 });
 
 export default app;

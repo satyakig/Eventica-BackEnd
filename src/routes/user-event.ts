@@ -30,7 +30,6 @@ router.post(
       status = verifyStatus(req.body.status);
       status = Number(status);
     } catch (err) {
-      console.error(err);
       return next(httpErrors(400, err));
     }
 
@@ -42,7 +41,6 @@ router.post(
         .where('eid', '==', eid)
         .get();
     } catch (err) {
-      console.error(err);
       return next(httpErrors(500, err));
     }
 
@@ -65,7 +63,6 @@ router.post(
         .where('uid', '==', user.uid)
         .get();
     } catch (err) {
-      console.error(err);
       return next(httpErrors(500, err));
     }
 
@@ -73,7 +70,6 @@ router.post(
       try {
         await verifyEventCapacity(eid);
       } catch (err) {
-        console.error(err);
         return next(httpErrors(400, err));
       }
     }
@@ -91,7 +87,6 @@ router.post(
               .send(`You have RSVPed to the event with: ${getStringFromStatus(status)}`);
           })
           .catch((err) => {
-            console.error(err);
             return next(httpErrors(500, err));
           });
       }
@@ -108,12 +103,10 @@ router.post(
               .send(`You have RSVPed to the event with: ${getStringFromStatus(status)}`);
           })
           .catch((err) => {
-            console.error(err);
             return next(httpErrors(500, err));
           });
       }
     } catch (err) {
-      console.error(err);
       return next(httpErrors(500, err));
     }
   }),

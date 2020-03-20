@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import httpErrors from 'http-errors';
 import { getAuth } from './Firebase';
 import { DB_PATHS, getDocument } from './DBHelper';
+import { LOGGER } from './Logger';
 
 /**
  * Gets the id of the user from the provided email address
@@ -91,7 +92,7 @@ export async function checkIfAuthorized(
 
     return next();
   } catch (error) {
-    console.error(error);
+    LOGGER.error(error);
     return next(httpErrors(401, error));
   }
 }

@@ -1,3 +1,4 @@
+import * as lodash from 'lodash';
 import { isNumber, sanitizeString } from './DataValidator';
 import { getDb } from './Firebase';
 import { DB_PATHS } from './DBHelper';
@@ -123,10 +124,10 @@ export function verifyEvent(event: any): any {
     throw new Error('Invalid photo url.');
   }
 
-  newEvent.name = sanitizeString(newEvent.name);
+  newEvent.name = lodash.startCase(sanitizeString(newEvent.name));
   newEvent.start = Number(newEvent.start);
   newEvent.end = Number(newEvent.end);
-  newEvent.address = sanitizeString(newEvent.address);
+  newEvent.address = lodash.startCase(sanitizeString(newEvent.address));
   newEvent.fee = Number(newEvent.fee);
   newEvent.photoURL = sanitizeString(newEvent.photoURL);
   newEvent.desc = sanitizeString(newEvent.desc);
