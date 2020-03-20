@@ -75,9 +75,9 @@ router.post(
         return Promise.all([addEvent, addUser]);
       })
       .then(() => {
-        const message = `${event.name} has been created.`;
-        sendNotification(user, true, respTitle, message);
-        return res.status(200).send(message);
+        respMessage = `${event.name} has been created.`;
+        sendNotification(user, true, respTitle, respMessage);
+        return res.status(200).send(respMessage);
       });
   }),
 );
@@ -122,9 +122,9 @@ router.patch(
     }
 
     return updateDocument(DB_PATHS.EVENTS, eid, event).then(() => {
-      const message = `${event.name} has been updated.`;
-      sendNotification(user, true, respTitle, message);
-      return res.status(200).send(message);
+      respMessage = `${event.name} has been updated.`;
+      sendNotification(user, true, respTitle, respMessage);
+      return res.status(200).send(respMessage);
     });
   }),
 );
@@ -156,9 +156,9 @@ router.delete(
       status: EVENT_STATUS.CANCELLED,
       lastUpdated: moment().valueOf(),
     }).then(() => {
-      const message = 'Event has been cancelled.';
-      sendNotification(user, true, respTitle, message);
-      return res.status(200).send(message);
+      respMessage = 'Event has been cancelled.';
+      sendNotification(user, true, respTitle, respMessage);
+      return res.status(200).send(respMessage);
     });
   }),
 );

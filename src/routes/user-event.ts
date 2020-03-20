@@ -66,7 +66,7 @@ router.post(
     if (eventUser.docs.length === 1) {
       const docId = eventUser.docs[0].id;
       const userEventData = eventUser.docs[0].data();
-      const paid = userEventData.paid;
+      const paid = userEventData.paid !== undefined ? userEventData.paid : false;
 
       const update = {
         status,
@@ -76,7 +76,7 @@ router.post(
       return updateDocument(DB_PATHS.EVENT_USERS, docId, update).then(() => {
         respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
         sendNotification(user, true, respTitle, respMessage);
-        return res.status(200).send(sendNotification);
+        return res.status(200).send(respMessage);
       });
     }
 
@@ -91,7 +91,7 @@ router.post(
     }).then(() => {
       respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
       sendNotification(user, true, respTitle, respMessage);
-      return res.status(200).send(sendNotification);
+      return res.status(200).send(respMessage);
     });
   }),
 );

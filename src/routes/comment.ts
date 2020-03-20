@@ -69,9 +69,9 @@ router.post(
         return setDocument(DB_PATHS.EVENT_COMMENTS, cid, comment);
       })
       .then(() => {
-        const message = 'Your message has been posted to the event.';
-        sendNotification(user, true, respTitle, message);
-        return res.status(200).send(message);
+        respMessage = 'Your message has been posted to the event.';
+        sendNotification(user, true, respTitle, respMessage);
+        return res.status(200).send(respMessage);
       });
   }),
 );
@@ -128,9 +128,9 @@ router.patch(
 
     comment['lastUpdated'] = moment().valueOf();
     return updateDocument(DB_PATHS.EVENT_COMMENTS, cid, comment).then(() => {
-      const message = 'Your message has been updated.';
-      sendNotification(user, true, respTitle, message);
-      return res.status(200).send(message);
+      respMessage = 'Your message has been updated.';
+      sendNotification(user, true, respTitle, respMessage);
+      return res.status(200).send(respMessage);
     });
   }),
 );
