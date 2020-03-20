@@ -52,7 +52,7 @@ router.post(
       .then((doc) => {
         const eid = doc.id;
 
-        const now = moment().unix();
+        const now = moment().valueOf();
         event['createdOn'] = now;
         event['lastUpdated'] = now;
         event['status'] = EVENT_STATUS.ACTIVE;
@@ -112,7 +112,7 @@ router.patch(
     try {
       await validateHost(eid, user);
       event = verifyEvent(req.body);
-      event['lastUpdated'] = moment().unix();
+      event['lastUpdated'] = moment().valueOf();
 
       await checkEventCapacity(eid, event.capacity);
     } catch (err) {
@@ -154,7 +154,7 @@ router.delete(
 
     return updateDocument(DB_PATHS.EVENTS, eid, {
       status: EVENT_STATUS.CANCELLED,
-      lastUpdated: moment().unix(),
+      lastUpdated: moment().valueOf(),
     }).then(() => {
       const message = 'Event has been cancelled.';
       sendNotification(user, true, respTitle, message);

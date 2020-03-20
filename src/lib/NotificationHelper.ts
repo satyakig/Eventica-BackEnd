@@ -7,6 +7,6 @@ export function sendNotification(user: any, success: boolean, title: string, mes
     success,
     title,
     message,
-    timestamp: moment().unix(),
+    timestamp: moment().valueOf(),
   });
 }
