@@ -16,15 +16,12 @@ function eventsHosted(user: any) {
     .get()
     .then((snapshot) => {
       for (const doc of snapshot.docs) {
-        getDb()
-          .collection(DB_PATHS.EVENTS)
-          .doc(doc.id)
-          .update({
-            createdBy: {
-              email: user.email,
-              name: user.name,
-            },
-          });
+        updateDocument(DB_PATHS.EVENTS, doc.id, {
+          createdBy: {
+            email: user.email,
+            name: user.name,
+          },
+        });
       }
     });
 }
@@ -36,16 +33,30 @@ function commentsMade(user: any) {
     .get()
     .then((snapshot) => {
       for (const doc of snapshot.docs) {
-        getDb()
-          .collection(DB_PATHS.EVENT_COMMENTS)
-          .doc(doc.id)
-          .update({
-            createdBy: {
-              email: user.email,
-              name: user.name,
-              profile: user.photoURL,
-            },
-          });
+        updateDocument(DB_PATHS.EVENT_COMMENTS, doc.id, {
+          createdBy: {
+            email: user.email,
+            name: user.name,
+            profile: user.photoURL,
+          },
+        });
+      }
+    });
+}
+
+function eventUsers(user: any) {
+  getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .where('uid', '==', user.uid)
+    .get()
+    .then((snapshot) => {
+      for (const doc of snapshot.docs) {
+        updateDocument(DB_PATHS.EVENT_USERS, doc.id, {
+          createdBy: {
+            name: user.name,
+            photoURL: user.photoURL,
+          },
+        });
       }
     });
 }
@@ -63,10 +74,6 @@ router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
     const user = await getUserFromRequest(req);
-
-    if (!user.email) {
-      return next(httpErrors(400, 'Invalid user email.'));
-    }
 
     const phone = sanitizeString(req.body.phone);
     const name = lodash.startCase(sanitizeString(req.body.name).toLowerCase());
@@ -90,6 +97,7 @@ router.patch(
 
     eventsHosted(user);
     commentsMade(user);
+    eventUsers(user);
 
     return updateDocument(DB_PATHS.USERS, user.uid, {
       name,
@@ -97,7 +105,7 @@ router.patch(
       phone,
     })
       .then(() => {
-        return res.status(200).send('Your account information has been updated.');
+        return res.status(200).send('Your account information have been updated.');
       })
       .catch((err) => {
         return next(httpErrors(500, err));

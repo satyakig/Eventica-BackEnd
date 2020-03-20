@@ -150,26 +150,33 @@ export function verifyEvent(event: any): any {
   return newEvent;
 }
 
-export async function checkEventCapacity(eid: string, capacity: number) {
-  const event = await getDb()
-    .collection(DB_PATHS.EVENTS)
-    .doc(eid)
-    .get()
-    .then((doc) => {
-      return doc.data();
-    });
-
-  if (!event) {
-    throw new Error('Event data not found.');
+export async function validateHost(eid: string, user: any) {
+  if (!eid) {
+    throw new Error('Invalid event id provided.');
   }
 
+  const eventUser = await getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .where('eid', '==', eid)
+    .where('uid', '==', user.uid)
+    .where('status', '==', USER_EVENT_STATUS.HOST)
+    .get();
+
+  if (eventUser.docs.length !== 1) {
+    throw new Error(
+      'Event could not be found or you does not have privileges to modify this event.',
+    );
+  }
+}
+
+export async function checkEventCapacity(eid: string, newCapacity: number) {
   const attendees = await getDb()
     .collection(DB_PATHS.EVENT_USERS)
     .where('eid', '==', eid)
     .where('status', '==', USER_EVENT_STATUS.ATTENDING)
     .get();
 
-  if (capacity < attendees.docs.length) {
+  if (newCapacity < attendees.docs.length) {
     throw new Error('Capacity is too low, attendees have already RSVPed to the event.');
   }
 }

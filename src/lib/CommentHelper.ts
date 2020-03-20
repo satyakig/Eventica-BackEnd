@@ -1,4 +1,6 @@
 import { sanitizeString } from './DataValidator';
+import { getDb } from './Firebase';
+import { DB_PATHS } from './DBHelper';
 
 const validModyableKeys = ['message', 'photoURL'];
 
@@ -12,7 +14,7 @@ export function verifyComment(comment: any): any {
   }
 
   if (!newComment.message && !newComment.photoURL) {
-    throw new Error('Invalid comment format.');
+    throw new Error('Your post must include a message or media.');
   }
 
   if (newComment.photoURL && !newComment.photoURL.includes('https://')) {
@@ -25,4 +27,22 @@ export function verifyComment(comment: any): any {
   }
 
   return newComment;
+}
+
+export async function validateUserAndEvent(eid: string, user: any) {
+  if (!eid) {
+    throw new Error('Invalid event id provided.');
+  }
+
+  const eventUser = await getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .where('eid', '==', eid)
+    .where('uid', '==', user.uid)
+    .get();
+
+  if (eventUser.docs.length !== 1) {
+    throw new Error(
+      'Event could not be found or you does not have privileges to access this event.',
+    );
+  }
 }

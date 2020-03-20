@@ -1,25 +1,55 @@
 import { isNumber } from './DataValidator';
-import { USER_EVENT_STATUS } from './EventHelper';
+import { EVENT_STATUS, USER_EVENT_STATUS } from './EventHelper';
 import { getDb } from './Firebase';
 import { DB_PATHS } from './DBHelper';
 
-export function verifyStatus(status: any): any {
+export function verifyStatus(status: any) {
   if (!isNumber(status)) {
     throw new Error('Status is not a number.');
   }
 
+  const stat = Number(status);
+
   if (
-    status !== USER_EVENT_STATUS.ATTENDING &&
-    status !== USER_EVENT_STATUS.MAYBE &&
-    status !== USER_EVENT_STATUS.NO
+    stat !== USER_EVENT_STATUS.ATTENDING &&
+    stat !== USER_EVENT_STATUS.MAYBE &&
+    stat !== USER_EVENT_STATUS.NO
   ) {
     throw new Error('Not a valid status type.');
   }
 
-  return status;
+  return stat;
 }
 
-export function getStringFromStatus(status: number): string {
+export async function getEventData(eid: string) {
+  if (!eid) {
+    throw new Error('Invalid event id provided.');
+  }
+
+  const snapshot = await getDb()
+    .collection(DB_PATHS.EVENTS)
+    .where('eid', '==', eid)
+    .get();
+
+  if (snapshot.docs.length !== 1) {
+    throw new Error('Event could not be found.');
+  }
+
+  const doc = snapshot.docs[0];
+  const data = doc.data();
+
+  if (!doc.exists || !data) {
+    throw new Error('Event could not be found.');
+  }
+
+  if (data.status !== EVENT_STATUS.ACTIVE) {
+    throw new Error('Event is currently not active.');
+  }
+
+  return data;
+}
+
+export function getStringFromStatus(status: number) {
   switch (status) {
     case USER_EVENT_STATUS.ATTENDING:
       return 'Attending';

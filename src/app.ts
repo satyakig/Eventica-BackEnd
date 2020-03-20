@@ -15,7 +15,11 @@ import { LOGGER } from './lib/Logger';
 
 const app = express();
 
-app.use(morgan('short'));
+const isProd = process.env.NODE_ENV === 'production';
+
+if (!isProd) {
+  app.use(morgan('short'));
+}
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -39,13 +43,15 @@ app.use('/', (req, res, next) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
-  LOGGER.error({
-    method: req.method,
-    url: req.path,
-    auth: req.headers['authorization'],
-    body: req.body,
-    error,
-  });
+  if (isProd) {
+    LOGGER.error({
+      method: req.method,
+      url: req.path,
+      auth: req.headers['authorization'],
+      body: req.body,
+      error,
+    });
+  }
 
   if (
     error.status !== 404 &&
@@ -53,7 +59,7 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
     error.status !== 401 &&
     error.status !== 500
   ) {
-    return res.status(500).send(error.message);
+    return res.status(500).send('Internal server error');
   }
 
   return res.status(error.status).send(error.message);

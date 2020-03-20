@@ -7,11 +7,11 @@ import {
   checkEventCapacity,
   EVENT_STATUS,
   USER_EVENT_STATUS,
+  validateHost,
   verifyEvent,
 } from '../lib/EventHelper';
 import { addToCollection, DB_PATHS, setDocument, updateDocument } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
-import { getDb } from '../lib/Firebase';
 
 const router = Router();
 
@@ -34,42 +34,44 @@ const router = Router();
 router.post(
   '/',
   asyncHandler(async (req, res, next) => {
+    const user = await getUserFromRequest(req);
+
+    let event: any;
     try {
-      const event = verifyEvent(req.body);
-      const user = await getUserFromRequest(req);
-
-      return addToCollection(DB_PATHS.EVENTS, {})
-        .then((doc) => {
-          const eid = doc.id;
-
-          const now = moment().unix();
-          event['createdOn'] = now;
-          event['lastUpdated'] = now;
-          event['status'] = EVENT_STATUS.ACTIVE;
-          event['eid'] = eid;
-          event['createdBy'] = {
-            email: user.email,
-            name: user.name,
-          };
-
-          const addEvent = setDocument(DB_PATHS.EVENTS, eid, event);
-          const addUser = addToCollection(DB_PATHS.EVENT_USERS, {
-            eid,
-            uid: user.uid,
-            status: USER_EVENT_STATUS.HOST,
-          });
-
-          return Promise.all([addEvent, addUser]);
-        })
-        .then(() => {
-          return res.status(200).send('Event has been created.');
-        })
-        .catch((err) => {
-          return next(httpErrors(500, err));
-        });
+      event = verifyEvent(req.body);
     } catch (err) {
       return next(httpErrors(400, err));
     }
+
+    return addToCollection(DB_PATHS.EVENTS, {})
+      .then((doc) => {
+        const eid = doc.id;
+
+        const now = moment().unix();
+        event['createdOn'] = now;
+        event['lastUpdated'] = now;
+        event['status'] = EVENT_STATUS.ACTIVE;
+        event['eid'] = eid;
+        event['createdBy'] = {
+          email: user.email,
+          name: user.name,
+        };
+
+        const addEvent = setDocument(DB_PATHS.EVENTS, eid, event);
+        const addUser = addToCollection(DB_PATHS.EVENT_USERS, {
+          eid,
+          uid: user.uid,
+          status: USER_EVENT_STATUS.HOST,
+          name: user.name,
+          photoURL: user.photoURL,
+          paid: true,
+        });
+
+        return Promise.all([addEvent, addUser]);
+      })
+      .then(() => {
+        return res.status(200).send('Event has been created.');
+      });
   }),
 );
 
@@ -95,47 +97,22 @@ router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
     const eid = sanitizeString(req.body.eid);
+    const user = await getUserFromRequest(req);
 
-    if (!eid) {
-      return next(httpErrors(400, 'Invalid event id provided.'));
-    }
-
+    let event: any;
     try {
-      const user = await getUserFromRequest(req);
-      const eventUser = await getDb()
-        .collection(DB_PATHS.EVENT_USERS)
-        .where('eid', '==', eid)
-        .where('uid', '==', user.uid)
-        .where('status', '==', USER_EVENT_STATUS.HOST)
-        .get();
-
-      if (eventUser.docs.length !== 1) {
-        return next(httpErrors(400, 'User does not have privileges to modify this event.'));
-      }
-    } catch (err) {
-      return next(httpErrors(500, err));
-    }
-
-    try {
-      const event = verifyEvent(req.body);
+      await validateHost(eid, user);
+      event = verifyEvent(req.body);
       event['lastUpdated'] = moment().unix();
 
-      try {
-        await checkEventCapacity(eid, event.capacity);
-      } catch (err) {
-        return next(httpErrors(400, err));
-      }
-
-      return updateDocument(DB_PATHS.EVENTS, eid, event)
-        .then(() => {
-          return res.status(200).send('Event has been updated.');
-        })
-        .catch((err) => {
-          return next(httpErrors(500, err));
-        });
+      await checkEventCapacity(eid, event.capacity);
     } catch (err) {
       return next(httpErrors(400, err));
     }
+
+    return updateDocument(DB_PATHS.EVENTS, eid, event).then(() => {
+      return res.status(200).send('Event has been updated.');
+    });
   }),
 );
 
@@ -150,37 +127,20 @@ router.delete(
   '/',
   asyncHandler(async (req, res, next) => {
     const eid = sanitizeString(req.body.eid);
-
-    if (!eid) {
-      return next(httpErrors(400, 'Invalid event id provided.'));
-    }
+    const user = await getUserFromRequest(req);
 
     try {
-      const user = await getUserFromRequest(req);
-      const eventUser = await getDb()
-        .collection(DB_PATHS.EVENT_USERS)
-        .where('eid', '==', eid)
-        .where('uid', '==', user.uid)
-        .where('status', '==', USER_EVENT_STATUS.HOST)
-        .get();
-
-      if (eventUser.docs.length !== 1) {
-        return next(httpErrors(400, 'User does not have privileges to modify this event.'));
-      }
+      await validateHost(eid, user);
     } catch (err) {
-      return next(httpErrors(500, err));
+      return next(httpErrors(400, err));
     }
 
     return updateDocument(DB_PATHS.EVENTS, eid, {
       status: EVENT_STATUS.CANCELLED,
       lastUpdated: moment().unix(),
-    })
-      .then(() => {
-        return res.status(200).send('Event has been cancelled.');
-      })
-      .catch((err) => {
-        return next(httpErrors(500, err));
-      });
+    }).then(() => {
+      return res.status(200).send('Event has been cancelled.');
+    });
   }),
 );
 
