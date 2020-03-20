@@ -12,6 +12,7 @@ import {
 } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
 import { validateUserAndEvent, verifyComment } from '../lib/CommentHelper';
+import { sendNotification } from '../lib/NotificationHelper';
 
 const router = Router();
 
@@ -27,13 +28,17 @@ const router = Router();
 router.post(
   '/',
   asyncHandler(async (req, res, next) => {
+    const respTitle = 'Message Create';
+    let respMessage = '';
     const eid = sanitizeString(req.body.eid);
     const user = await getUserFromRequest(req);
 
     try {
       await validateUserAndEvent(eid, user);
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     let comment: any;
@@ -41,7 +46,9 @@ router.post(
     try {
       comment = verifyComment(req.body);
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     return addToCollection(DB_PATHS.EVENT_COMMENTS, comment)
@@ -62,7 +69,9 @@ router.post(
         return setDocument(DB_PATHS.EVENT_COMMENTS, cid, comment);
       })
       .then(() => {
-        return res.status(200).send('Your post has been uploaded.');
+        const message = 'Your message has been posted to the event.';
+        sendNotification(user, true, respTitle, message);
+        return res.status(200).send(message);
       });
   }),
 );
@@ -80,6 +89,8 @@ router.post(
 router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
+    const respTitle = 'Message Update';
+    let respMessage = '';
     const cid = sanitizeString(req.body.cid);
     const eid = sanitizeString(req.body.eid);
     const user = await getUserFromRequest(req);
@@ -87,29 +98,39 @@ router.patch(
     try {
       await validateUserAndEvent(eid, user);
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     if (!cid) {
-      return next(httpErrors(400, 'Invalid post id provided.'));
+      respMessage = 'Invalid message id provided.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     let comment: any;
 
     comment = await getDocument(DB_PATHS.EVENT_COMMENTS, cid);
     if (!comment.exists) {
-      return next(httpErrors(400, 'This post does not exist.'));
+      respMessage = 'The message specified does not exist.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     try {
       comment = verifyComment(req.body);
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     comment['lastUpdated'] = moment().valueOf();
     return updateDocument(DB_PATHS.EVENT_COMMENTS, cid, comment).then(() => {
-      return res.status(200).send('Your post has been updated.');
+      const message = 'Your message has been updated.';
+      sendNotification(user, true, respTitle, message);
+      return res.status(200).send(message);
     });
   }),
 );

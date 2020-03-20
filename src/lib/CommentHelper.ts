@@ -14,7 +14,7 @@ export function verifyComment(comment: any): any {
   }
 
   if (!newComment.message && !newComment.photoURL) {
-    throw new Error('Your post must include a message or media.');
+    throw new Error('Your post must include a message or a picture.');
   }
 
   if (newComment.photoURL && !newComment.photoURL.includes('https://')) {

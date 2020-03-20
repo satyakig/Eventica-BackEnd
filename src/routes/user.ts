@@ -6,6 +6,7 @@ import { getUserFromRequest } from '../lib/AuthHelper';
 import { DB_PATHS, updateDocument } from '../lib/DBHelper';
 import { isMobile, sanitizeString } from '../lib/DataValidator';
 import { getDb } from '../lib/Firebase';
+import { sendNotification } from '../lib/NotificationHelper';
 
 const router = Router();
 
@@ -73,22 +74,30 @@ function eventUsers(user: any) {
 router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
-    const user = await getUserFromRequest(req);
+    const respTitle = 'Profile Update';
+    let respMessage = '';
 
+    const user = await getUserFromRequest(req);
     const phone = sanitizeString(req.body.phone);
     const name = lodash.startCase(sanitizeString(req.body.name).toLowerCase());
     const photoURL = sanitizeString(req.body.photoURL);
 
     if (name.length < 1) {
-      return next(httpErrors(400, 'Invalid name format.'));
+      respMessage = 'Invalid name provided.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     if (!isMobile(phone)) {
-      return next(httpErrors(400, 'Invalid phone format.'));
+      respMessage = 'Invalid phone number provided.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     if (!photoURL.includes('https://')) {
-      return next(httpErrors(400, 'Invalid photo url.'));
+      respMessage = 'Invalid photo url provided.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     user.name = name;
@@ -103,13 +112,11 @@ router.patch(
       name,
       photoURL,
       phone,
-    })
-      .then(() => {
-        return res.status(200).send('Your account information have been updated.');
-      })
-      .catch((err) => {
-        return next(httpErrors(500, err));
-      });
+    }).then(() => {
+      respMessage = 'Your profile information has been updated.';
+      sendNotification(user, true, respTitle, respMessage);
+      return res.status(200).send(respMessage);
+    });
   }),
 );
 

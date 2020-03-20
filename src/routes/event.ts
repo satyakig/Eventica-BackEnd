@@ -12,6 +12,7 @@ import {
 } from '../lib/EventHelper';
 import { addToCollection, DB_PATHS, setDocument, updateDocument } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
+import { sendNotification } from '../lib/NotificationHelper';
 
 const router = Router();
 
@@ -34,13 +35,17 @@ const router = Router();
 router.post(
   '/',
   asyncHandler(async (req, res, next) => {
+    const respTitle = 'Event Create';
+    let respMessage = '';
     const user = await getUserFromRequest(req);
 
     let event: any;
     try {
       event = verifyEvent(req.body);
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     return addToCollection(DB_PATHS.EVENTS, {})
@@ -70,7 +75,9 @@ router.post(
         return Promise.all([addEvent, addUser]);
       })
       .then(() => {
-        return res.status(200).send('Event has been created.');
+        const message = `${event.name} has been created.`;
+        sendNotification(user, true, respTitle, message);
+        return res.status(200).send(message);
       });
   }),
 );
@@ -96,6 +103,8 @@ router.post(
 router.patch(
   '/',
   asyncHandler(async (req, res, next) => {
+    const respTitle = 'Event Update';
+    let respMessage = '';
     const eid = sanitizeString(req.body.eid);
     const user = await getUserFromRequest(req);
 
@@ -107,11 +116,15 @@ router.patch(
 
       await checkEventCapacity(eid, event.capacity);
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     return updateDocument(DB_PATHS.EVENTS, eid, event).then(() => {
-      return res.status(200).send('Event has been updated.');
+      const message = `${event.name} has been updated.`;
+      sendNotification(user, true, respTitle, message);
+      return res.status(200).send(message);
     });
   }),
 );
@@ -126,20 +139,26 @@ router.patch(
 router.delete(
   '/',
   asyncHandler(async (req, res, next) => {
+    const respTitle = 'Event Cancel';
+    let respMessage = '';
     const eid = sanitizeString(req.body.eid);
     const user = await getUserFromRequest(req);
 
     try {
       await validateHost(eid, user);
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     return updateDocument(DB_PATHS.EVENTS, eid, {
       status: EVENT_STATUS.CANCELLED,
       lastUpdated: moment().unix(),
     }).then(() => {
-      return res.status(200).send('Event has been cancelled.');
+      const message = 'Event has been cancelled.';
+      sendNotification(user, true, respTitle, message);
+      return res.status(200).send(message);
     });
   }),
 );

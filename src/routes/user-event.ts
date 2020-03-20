@@ -12,6 +12,7 @@ import {
   verifyStatus,
 } from '../lib/UserEventHelper';
 import { sanitizeString } from '../lib/DataValidator';
+import { sendNotification } from '../lib/NotificationHelper';
 
 const router = Router();
 
@@ -26,6 +27,9 @@ const router = Router();
 router.post(
   '/',
   asyncHandler(async (req, res, next) => {
+    const respTitle = 'Event RSVP';
+    let respMessage = '';
+
     const user = await getUserFromRequest(req);
     const eid = sanitizeString(req.body.eid);
 
@@ -47,11 +51,15 @@ router.post(
         await verifyEventCapacity(eid);
       }
     } catch (err) {
-      return next(httpErrors(400, err));
+      respMessage = err;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     if (event.type === EVENT_TYPE.PUBLIC && eventUser.docs.length !== 1) {
-      next(httpErrors('You don not have permissions to join this event.'));
+      respMessage = 'You don not have permissions to join this event.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
     }
 
     // If the user already has an entry
@@ -66,9 +74,9 @@ router.post(
       };
 
       return updateDocument(DB_PATHS.EVENT_USERS, docId, update).then(() => {
-        return res
-          .status(200)
-          .send(`You have RSVPed to the event with: ${getStringFromStatus(status)}`);
+        respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
+        sendNotification(user, true, respTitle, respMessage);
+        return res.status(200).send(sendNotification);
       });
     }
 
@@ -81,9 +89,9 @@ router.post(
       photoURL: user.photoURL,
       paid: status === USER_EVENT_STATUS.ATTENDING,
     }).then(() => {
-      return res
-        .status(200)
-        .send(`You have RSVPed to the event with: ${getStringFromStatus(status)}`);
+      respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
+      sendNotification(user, true, respTitle, respMessage);
+      return res.status(200).send(sendNotification);
     });
   }),
 );

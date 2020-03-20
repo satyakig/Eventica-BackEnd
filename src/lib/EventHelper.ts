@@ -105,7 +105,7 @@ export function verifyEvent(event: any): any {
   }
 
   if (!isNumber(newEvent.capacity)) {
-    throw new Error('Invalid capacity type.');
+    throw new Error('Invalid event capacity.');
   }
 
   if (newEvent.type !== EVENT_TYPE.PRIVATE && newEvent.type !== EVENT_TYPE.PUBLIC) {
@@ -121,7 +121,7 @@ export function verifyEvent(event: any): any {
   }
 
   if (!newEvent.photoURL.includes('https://')) {
-    throw new Error('Invalid photo url.');
+    throw new Error('Invalid event photo url.');
   }
 
   newEvent.name = lodash.startCase(sanitizeString(newEvent.name));
@@ -144,7 +144,7 @@ export function verifyEvent(event: any): any {
   }
 
   if (newEvent.fee < 0) {
-    throw new Error('Event fee cannot be less than $0.');
+    throw new Error('Event fee cannot be less than 0.');
   }
 
   return newEvent;
@@ -177,6 +177,6 @@ export async function checkEventCapacity(eid: string, newCapacity: number) {
     .get();
 
   if (newCapacity < attendees.docs.length) {
-    throw new Error('Capacity is too low, attendees have already RSVPed to the event.');
+    throw new Error('Capacity is too low, too many attendees have already RSVPed to the event.');
   }
 }

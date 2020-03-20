@@ -5,7 +5,7 @@ import { DB_PATHS } from './DBHelper';
 
 export function verifyStatus(status: any) {
   if (!isNumber(status)) {
-    throw new Error('Status is not a number.');
+    throw new Error('User status is invalid.');
   }
 
   const stat = Number(status);
@@ -15,7 +15,7 @@ export function verifyStatus(status: any) {
     stat !== USER_EVENT_STATUS.MAYBE &&
     stat !== USER_EVENT_STATUS.NO
   ) {
-    throw new Error('Not a valid status type.');
+    throw new Error('User status is invalid.');
   }
 
   return stat;
@@ -52,11 +52,11 @@ export async function getEventData(eid: string) {
 export function getStringFromStatus(status: number) {
   switch (status) {
     case USER_EVENT_STATUS.ATTENDING:
-      return 'Attending';
+      return 'attending';
     case USER_EVENT_STATUS.MAYBE:
-      return 'Maybe';
+      return 'maybe';
     case USER_EVENT_STATUS.NO:
-      return 'Not Attending';
+      return 'not attending';
     default:
       return '';
   }
