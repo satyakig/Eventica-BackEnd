@@ -56,8 +56,8 @@ router.post(
       return next(httpErrors(400, respMessage));
     }
 
-    if (event.type === EVENT_TYPE.PUBLIC && eventUser.docs.length !== 1) {
-      respMessage = 'You don not have permissions to join this event.';
+    if (event.type === EVENT_TYPE.PRIVATE && eventUser.docs.length !== 1) {
+      respMessage = 'You do not have permissions to join this event.';
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
