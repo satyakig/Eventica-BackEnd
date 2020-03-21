@@ -49,7 +49,7 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
       url: req.path,
       auth: req.headers['authorization'],
       body: req.body,
-      error,
+      error: error.message,
     });
   }
 

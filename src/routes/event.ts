@@ -43,7 +43,7 @@ router.post(
     try {
       event = verifyEvent(req.body);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -116,7 +116,7 @@ router.patch(
 
       await checkEventCapacity(eid, event.capacity);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -147,7 +147,7 @@ router.delete(
     try {
       await validateHost(eid, user);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }

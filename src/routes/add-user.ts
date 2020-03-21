@@ -32,7 +32,7 @@ router.post(
       await validateHost(eid, user);
       event = await getEventData(eid);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }

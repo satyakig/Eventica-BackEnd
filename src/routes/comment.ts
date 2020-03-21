@@ -36,7 +36,7 @@ router.post(
     try {
       await validateUserAndEvent(eid, user);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -46,7 +46,7 @@ router.post(
     try {
       comment = verifyComment(req.body);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -98,7 +98,7 @@ router.patch(
     try {
       await validateUserAndEvent(eid, user);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -121,7 +121,7 @@ router.patch(
     try {
       comment = verifyComment(req.body);
     } catch (err) {
-      respMessage = err;
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
