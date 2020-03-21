@@ -52,11 +52,11 @@ export async function getEventData(eid: string) {
 export function getStringFromStatus(status: number) {
   switch (status) {
     case USER_EVENT_STATUS.ATTENDING:
-      return 'attending';
+      return 'Attending';
     case USER_EVENT_STATUS.MAYBE:
-      return 'maybe';
+      return 'Maybe';
     case USER_EVENT_STATUS.NO:
-      return 'not attending';
+      return 'Not Attending';
     default:
       return '';
   }
