@@ -165,7 +165,7 @@ export async function validateHost(eid: string, user: any) {
 
   const event = await getDb()
     .collection(DB_PATHS.EVENTS)
-    .doc('eid')
+    .doc(eid)
     .get();
 
   if (eventUser.docs.length !== 1) {
@@ -181,6 +181,7 @@ export async function validateHost(eid: string, user: any) {
   }
 
   const eventData = event.data();
+  console.log(eventData, event);
 
   if (!event.exists || !eventData) {
     throw new Error('Event could not be found.');
