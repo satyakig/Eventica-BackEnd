@@ -13,6 +13,7 @@ import {
 import { addToCollection, DB_PATHS, setDocument, updateDocument } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
 import { sendNotification } from '../lib/NotificationHelper';
+import { getDb } from '../lib/Firebase';
 
 const router = Router();
 
@@ -44,6 +45,12 @@ router.post(
       event = verifyEvent(req.body);
     } catch (err) {
       respMessage = err.message;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
+    if (event.end < moment().valueOf()) {
+      respMessage = 'Event end date has to be in the future.';
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -123,6 +130,12 @@ router.patch(
       return next(httpErrors(400, respMessage));
     }
 
+    if (event.end < moment().valueOf()) {
+      respMessage = 'Cannot update event past the end date.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
     return updateDocument(DB_PATHS.EVENTS, eid, event).then(() => {
       respMessage = `${event.name} has been updated.`;
       sendNotification(user, true, respTitle, respMessage);
@@ -150,6 +163,24 @@ router.delete(
       await validateHost(eid, user);
     } catch (err) {
       respMessage = err.message;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
+    const event = await getDb()
+      .collection(DB_PATHS.EVENTS)
+      .doc(eid)
+      .get();
+
+    const eventData = event.data();
+    if (!eventData) {
+      respMessage = 'Event could not be found.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
+    if (eventData.end < moment().valueOf()) {
+      respMessage = 'Cannot cancel an event that has already completed.';
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
