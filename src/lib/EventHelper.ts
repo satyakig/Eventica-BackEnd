@@ -181,7 +181,6 @@ export async function validateHost(eid: string, user: any) {
   }
 
   const eventData = event.data();
-  console.log(eventData, event);
 
   if (!event.exists || !eventData) {
     throw new Error('Event could not be found.');
