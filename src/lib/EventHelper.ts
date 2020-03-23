@@ -167,12 +167,6 @@ export async function validateHost(eid: string, user: any) {
       'Event could not be found or you does not have privileges to modify this event.',
     );
   }
-
-  if (eventUser.docs.length !== 1) {
-    throw new Error(
-      'Event could not be found or you does not have privileges to modify this event.',
-    );
-  }
 }
 
 export async function checkEventCapacity(eid: string, newCapacity: number) {
