@@ -1,4 +1,5 @@
 import * as lodash from 'lodash';
+import moment from 'moment';
 import { isNumber, sanitizeString } from './DataValidator';
 import { getDb } from './Firebase';
 import { DB_PATHS } from './DBHelper';
@@ -162,10 +163,31 @@ export async function validateHost(eid: string, user: any) {
     .where('status', '==', USER_EVENT_STATUS.HOST)
     .get();
 
+  const event = await getDb()
+    .collection(DB_PATHS.EVENTS)
+    .doc('eid')
+    .get();
+
   if (eventUser.docs.length !== 1) {
     throw new Error(
       'Event could not be found or you does not have privileges to modify this event.',
     );
+  }
+
+  if (eventUser.docs.length !== 1) {
+    throw new Error(
+      'Event could not be found or you does not have privileges to modify this event.',
+    );
+  }
+
+  const eventData = event.data();
+
+  if (!event.exists || !eventData) {
+    throw new Error('Event could not be found.');
+  }
+
+  if (eventData.end < moment().valueOf()) {
+    throw new Error('Event cannot be modified past the end date.');
   }
 }
 

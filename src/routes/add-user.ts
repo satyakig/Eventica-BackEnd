@@ -62,10 +62,13 @@ router.post(
 
       addToCollection(DB_PATHS.EVENT_USERS, {
         eid,
-        status: USER_EVENT_STATUS.INVITED,
         uid: userInfo.uid,
+        status: USER_EVENT_STATUS.INVITED,
         name: userInfo.name,
         photoURL: userInfo.photoURL,
+        paid: false,
+        fee: event.fee,
+        checkedIn: false,
       });
 
       sendNotification(

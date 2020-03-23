@@ -70,6 +70,8 @@ router.post(
           name: user.name,
           photoURL: user.photoURL,
           paid: true,
+          fee: 0,
+          checkedIn: true,
         });
 
         return Promise.all([addEvent, addUser]);

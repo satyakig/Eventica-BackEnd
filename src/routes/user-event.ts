@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import httpErrors from 'http-errors';
+import moment from 'moment';
 import { Router } from 'express';
 import { getUserFromRequest } from '../lib/AuthHelper';
 import { addToCollection, DB_PATHS, updateDocument } from '../lib/DBHelper';
@@ -62,16 +63,25 @@ router.post(
       return next(httpErrors(400, respMessage));
     }
 
+    if (event.end < moment().valueOf()) {
+      respMessage = 'Cannot join or leave event past the end date.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
     // If the user already has an entry
     if (eventUser.docs.length === 1) {
       const docId = eventUser.docs[0].id;
       const userEventData = eventUser.docs[0].data();
-      const paid = userEventData.paid !== undefined ? userEventData.paid : false;
 
-      const update = {
+      const update: any = {
         status,
-        paid: status === USER_EVENT_STATUS.ATTENDING ? true : paid,
+        paid: status === USER_EVENT_STATUS.ATTENDING ? true : userEventData.paid,
       };
+
+      if (status === USER_EVENT_STATUS.ATTENDING) {
+        update.fee = event.fee;
+      }
 
       return updateDocument(DB_PATHS.EVENT_USERS, docId, update).then(() => {
         respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
@@ -88,6 +98,8 @@ router.post(
       name: user.name,
       photoURL: user.photoURL,
       paid: status === USER_EVENT_STATUS.ATTENDING,
+      fee: event.fee,
+      checkedIn: false,
     }).then(() => {
       respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
       sendNotification(user, true, respTitle, respMessage);
