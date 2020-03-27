@@ -6,6 +6,7 @@ import { getUserFromRequest } from '../lib/AuthHelper';
 import {
   addToCollection,
   DB_PATHS,
+  deleteDocument,
   getDocument,
   setDocument,
   updateDocument,
@@ -129,6 +130,52 @@ router.patch(
     comment['lastUpdated'] = moment().valueOf();
     return updateDocument(DB_PATHS.EVENT_COMMENTS, cid, comment).then(() => {
       respMessage = 'Your message has been updated.';
+      sendNotification(user, true, respTitle, respMessage);
+      return res.status(200).send(respMessage);
+    });
+  }),
+);
+
+/**
+ * Delete Comment
+ * Sample JSON PATCH
+ {
+    "eid": "8UhyXDgfoBAJBboJkMQQ",
+    "cid": "rHhp2GgOLbrqfIsK1jLw"
+ }
+ */
+router.delete(
+  '/',
+  asyncHandler(async (req, res, next) => {
+    const respTitle = 'Message Delete';
+    let respMessage = '';
+    const cid = sanitizeString(req.body.cid);
+    const eid = sanitizeString(req.body.eid);
+    const user = await getUserFromRequest(req);
+
+    try {
+      await validateUserAndEvent(eid, user);
+    } catch (err) {
+      respMessage = err.message;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
+    if (!cid) {
+      respMessage = 'Invalid message id provided.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
+    const comment = await getDocument(DB_PATHS.EVENT_COMMENTS, cid);
+    if (!comment.exists) {
+      respMessage = 'The message specified does not exist.';
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
+    return deleteDocument(DB_PATHS.EVENT_COMMENTS, cid).then(() => {
+      respMessage = 'Your message has been deleted.';
       sendNotification(user, true, respTitle, respMessage);
       return res.status(200).send(respMessage);
     });

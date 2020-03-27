@@ -2,12 +2,12 @@ import { sanitizeString } from './DataValidator';
 import { getDb } from './Firebase';
 import { DB_PATHS } from './DBHelper';
 
-const validModyableKeys = ['message', 'photoURL'];
+const validModifiableKeys = ['message', 'photoURL'];
 
 export function verifyComment(comment: any): any {
   const newComment: any = {};
 
-  for (const key of validModyableKeys) {
+  for (const key of validModifiableKeys) {
     if (comment[key] !== undefined) {
       newComment[key] = comment[key];
     }
