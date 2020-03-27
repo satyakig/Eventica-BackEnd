@@ -21,6 +21,23 @@ export function verifyStatus(status: any) {
   return stat;
 }
 
+export async function verifyHost(eid: string, uid: string) {
+  if (!eid || !uid) {
+    throw new Error('Invalid event id, or invalid uid provided.');
+  }
+
+  const snapshot = await getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .where('eid', '==', eid)
+    .where('uid', '==', uid)
+    .where('status', '==', '0')
+    .get();
+
+  if (snapshot.docs.length !== 1) {
+    throw new Error('This user is not the host of this event');
+  }
+}
+
 export async function getEventData(eid: string) {
   if (!eid) {
     throw new Error('Invalid event id provided.');
@@ -47,6 +64,46 @@ export async function getEventData(eid: string) {
   }
 
   return data;
+}
+
+export async function verifyUserInEvent(eid: string, uid: string) {
+  if (!eid || !uid) {
+    throw new Error('Invalid event id, or invalid uid provided.');
+  }
+
+  const snapshot = await getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .where('eid', '==', eid)
+    .where('uid', '==', uid)
+    .get();
+
+  if (snapshot.docs.length !== 1) {
+    throw new Error('Ticket does not exist.');
+  }
+
+  const doc = snapshot.docs[0];
+  const data = doc.data();
+
+  if (!doc.exists || !data) {
+    throw new Error('Ticket could not be found.');
+  }
+
+  return [doc, data];
+}
+
+export async function checkinUser(userEvent: any) {
+  if (!userEvent) {
+    throw new Error('User Event not passed in');
+  }
+
+  const updateResults = await getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .doc(userEvent.id)
+    .update({ checkedIn: true });
+
+  if (!updateResults) {
+    throw new Error('Error checking in user');
+  }
 }
 
 export function getStringFromStatus(status: number) {

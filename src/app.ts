@@ -11,6 +11,7 @@ import { commentRoutes } from './routes/comment';
 import { userEventRoutes } from './routes/user-event';
 import { userRoutes } from './routes/user';
 import { addUserRoutes } from './routes/add-user';
+import { useTicketRoutes } from './routes/use-ticket';
 import { LOGGER } from './lib/Logger';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/comment', commentRoutes);
 app.use('/user-event', userEventRoutes);
 app.use('/user', userRoutes);
 app.use('/add-user', addUserRoutes);
+app.use('/use-ticket', useTicketRoutes);
 
 app.use('/', (req, res, next) => {
   return next(
