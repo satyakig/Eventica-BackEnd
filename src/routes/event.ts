@@ -13,7 +13,7 @@ import {
 import { addToCollection, DB_PATHS, setDocument, updateDocument } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
 import { sendNotification } from '../lib/NotificationHelper';
-import { getDb } from '../lib/Firebase';
+import { getEventData } from '../lib/UserEventHelper';
 
 const router = Router();
 
@@ -167,14 +167,12 @@ router.delete(
       return next(httpErrors(400, respMessage));
     }
 
-    const event = await getDb()
-      .collection(DB_PATHS.EVENTS)
-      .doc(eid)
-      .get();
+    let eventData: any;
 
-    const eventData = event.data();
-    if (!eventData) {
-      respMessage = 'Event could not be found.';
+    try {
+      eventData = await getEventData(eid);
+    } catch (err) {
+      respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
