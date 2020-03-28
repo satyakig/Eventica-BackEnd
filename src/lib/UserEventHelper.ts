@@ -1,7 +1,7 @@
 import { isNumber } from './DataValidator';
 import { EVENT_STATUS, USER_EVENT_STATUS } from './EventHelper';
 import { getDb } from './Firebase';
-import { DB_PATHS } from './DBHelper';
+import { DB_PATHS, updateDocument } from './DBHelper';
 
 export function verifyStatus(status: any) {
   if (!isNumber(status)) {
@@ -47,6 +47,40 @@ export async function getEventData(eid: string) {
   }
 
   return data;
+}
+
+export async function verifyUserInEvent(eid: string, uid: string) {
+  if (!eid || !uid) {
+    throw new Error('Invalid event id, or invalid uid provided.');
+  }
+
+  const snapshot = await getDb()
+    .collection(DB_PATHS.EVENT_USERS)
+    .where('eid', '==', eid)
+    .where('uid', '==', uid)
+    .get();
+
+  if (snapshot.docs.length !== 1) {
+    throw new Error('Ticket does not exist.');
+  }
+
+  const doc = snapshot.docs[0];
+  const data = doc.data();
+
+  if (!doc.exists || !data) {
+    throw new Error('Ticket could not be found.');
+  }
+
+  return [doc, data];
+}
+
+export async function checkinUser(userEvent: any) {
+  const updateResults = await updateDocument(DB_PATHS.EVENT_USERS, userEvent.id, {
+    checkedIn: true,
+  });
+  if (!updateResults) {
+    throw new Error('Error checking in user');
+  }
 }
 
 export function getStringFromStatus(status: number) {
