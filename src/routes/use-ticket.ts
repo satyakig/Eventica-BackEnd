@@ -1,9 +1,12 @@
 import asyncHandler from 'express-async-handler';
 import httpErrors from 'http-errors';
 import { Router } from 'express';
+import moment from 'moment';
 import { sanitizeString } from '../lib/DataValidator';
-import { getEventData, verifyUserInEvent, checkinUser, verifyHost } from '../lib/UserEventHelper';
+import { getEventData, verifyUserInEvent, checkinUser } from '../lib/UserEventHelper';
 import { sendNotification } from '../lib/NotificationHelper';
+import { validateHost } from '../lib/EventHelper';
+import { getUserFromRequest } from '../lib/AuthHelper';
 
 const router = Router();
 
@@ -22,14 +25,13 @@ router.post(
     const respTitle = 'Ticket Scanner';
     let respMessage = '';
 
-    const user = sanitizeString(req.body.user);
-    // const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest(req);
     const eid = sanitizeString(req.body.eid);
     const uid = sanitizeString(req.body.uid);
 
     // Validate the user who sent the request is the host of the event
     try {
-      await verifyHost(eid, uid);
+      await validateHost(eid, user);
     } catch (err) {
       respMessage = err.message;
       sendNotification(user, false, respTitle, respMessage);
@@ -37,10 +39,17 @@ router.post(
     }
 
     // Validate the event is active and hasn't ended
+    let eventData: any;
     try {
-      await getEventData(eid);
+      eventData = await getEventData(eid);
     } catch (err) {
       respMessage = err.message;
+      sendNotification(user, false, respTitle, respMessage);
+      return next(httpErrors(400, respMessage));
+    }
+
+    if (eventData.end < moment().valueOf()) {
+      respMessage = 'Cannot cancel an event that has already completed.';
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -62,7 +71,9 @@ router.post(
     const checkedIn = userEventData.checkedIn;
 
     if (checkedIn) {
-      return res.status(200).send('User has already checked in');
+      respMessage = 'User has already checked in';
+      sendNotification(user, false, respTitle, respMessage);
+      return res.status(400).send(respMessage);
     }
 
     // Checkin this user
@@ -74,7 +85,9 @@ router.post(
       return next(httpErrors(400, respMessage));
     }
 
-    return res.status(200).send('Successfully scanned the ticket');
+    respMessage = 'Successfully scanned ticket';
+    sendNotification(user, false, respTitle, respMessage);
+    return res.status(200).send(respMessage);
   }),
 );
 
