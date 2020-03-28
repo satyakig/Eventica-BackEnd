@@ -86,3 +86,19 @@ export function updateDocument(
     .doc(documentID)
     .update(document);
 }
+
+/**
+ * This method is used to delete a specific document in the Firebase Firestore db
+ * @param collection - The name of the collection where the document is stored
+ * @param documentID - The ID of the document being deleted
+ * @returns Promise - Returns a promise that the document will be deleted
+ */
+export function deleteDocument(
+  collection: string,
+  documentID: string,
+): Promise<FirebaseFirestore.WriteResult> {
+  return getDb()
+    .collection(collection)
+    .doc(documentID)
+    .delete();
+}
