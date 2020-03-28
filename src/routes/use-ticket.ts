@@ -86,7 +86,7 @@ router.post(
     }
 
     respMessage = 'Successfully scanned ticket';
-    sendNotification(user, false, respTitle, respMessage);
+    sendNotification(user, true, respTitle, respMessage);
     return res.status(200).send(respMessage);
   }),
 );
