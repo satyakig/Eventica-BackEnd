@@ -127,7 +127,7 @@ export function verifyEvent(event: any): any {
   newEvent.name = lodash.startCase(sanitizeString(newEvent.name));
   newEvent.start = Number(newEvent.start);
   newEvent.end = Number(newEvent.end);
-  newEvent.address = lodash.startCase(sanitizeString(newEvent.address));
+  newEvent.address = sanitizeString(newEvent.address);
   newEvent.fee = Number(newEvent.fee);
   newEvent.photoURL = sanitizeString(newEvent.photoURL);
   newEvent.desc = sanitizeString(newEvent.desc);
