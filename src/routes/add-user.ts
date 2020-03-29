@@ -38,6 +38,8 @@ router.post(
     }
 
     const emails = req.body.emails;
+    console.log(eid, user, emails);
+
     if (!emails || emails.length < 1) {
       respMessage = 'At least one email address required.';
       sendNotification(user, false, respTitle, respMessage);
@@ -48,37 +50,38 @@ router.post(
 
     /* eslint-disable no-await-in-loop */
     for (const email of emails) {
-      const userInfo = await getUserRecordByEmail(email);
+      try {
+        const userInfo = await getUserRecordByEmail(email);
+        const evUser = await getDb()
+          .collection(DB_PATHS.EVENT_USERS)
+          .where('eid', '==', eid)
+          .where('uid', '==', userInfo.uid)
+          .get();
 
-      const evUser = await getDb()
-        .collection(DB_PATHS.EVENT_USERS)
-        .where('eid', '==', eid)
-        .where('uid', '==', userInfo.uid)
-        .get();
+        if (evUser.docs.length !== 0) {
+          continue;
+        }
 
-      if (evUser.docs.length !== 0) {
-        continue;
-      }
+        addToCollection(DB_PATHS.EVENT_USERS, {
+          eid,
+          uid: userInfo.uid,
+          status: USER_EVENT_STATUS.INVITED,
+          name: userInfo.name,
+          photoURL: userInfo.photoURL,
+          paid: false,
+          fee: event.fee,
+          checkedIn: false,
+        });
 
-      addToCollection(DB_PATHS.EVENT_USERS, {
-        eid,
-        uid: userInfo.uid,
-        status: USER_EVENT_STATUS.INVITED,
-        name: userInfo.name,
-        photoURL: userInfo.photoURL,
-        paid: false,
-        fee: event.fee,
-        checkedIn: false,
-      });
+        sendNotification(
+          userInfo,
+          true,
+          'Event Invite',
+          `You have been invited to join ${event.name}.`,
+        );
 
-      sendNotification(
-        userInfo,
-        true,
-        'Event Invite',
-        `You have been invited to join ${event.name}.`,
-      );
-
-      newDocs++;
+        newDocs++;
+      } catch (err) {}
     }
 
     if (newDocs === 0) {
@@ -87,7 +90,7 @@ router.post(
       return next(httpErrors(400, respMessage));
     }
 
-    respMessage = `${newDocs} users have been added to the event.`;
+    respMessage = `${newDocs} user(s) have been added to the event.`;
     sendNotification(user, true, respTitle, respMessage);
     return res.status(200).send(respMessage);
   }),
