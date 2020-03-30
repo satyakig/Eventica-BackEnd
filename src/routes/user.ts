@@ -4,7 +4,7 @@ import { Router } from 'express';
 import * as lodash from 'lodash';
 import { getUserFromRequest } from '../lib/AuthHelper';
 import { DB_PATHS, updateDocument } from '../lib/DBHelper';
-import { isMobile, sanitizeString } from '../lib/DataValidator';
+import { sanitizeString } from '../lib/DataValidator';
 import { getDb } from '../lib/Firebase';
 import { sendNotification } from '../lib/NotificationHelper';
 
@@ -78,18 +78,11 @@ router.patch(
     let respMessage = '';
 
     const user = await getUserFromRequest(req);
-    const phone = sanitizeString(req.body.phone);
     const name = lodash.startCase(sanitizeString(req.body.name).toLowerCase());
     const photoURL = sanitizeString(req.body.photoURL);
 
     if (name.length < 1) {
       respMessage = 'Invalid name provided.';
-      sendNotification(user, false, respTitle, respMessage);
-      return next(httpErrors(400, respMessage));
-    }
-
-    if (!isMobile(phone)) {
-      respMessage = 'Invalid phone number provided.';
       sendNotification(user, false, respTitle, respMessage);
       return next(httpErrors(400, respMessage));
     }
@@ -101,7 +94,6 @@ router.patch(
     }
 
     user.name = name;
-    user.phone = phone;
     user.photoURL = photoURL;
 
     eventsHosted(user);
@@ -111,7 +103,6 @@ router.patch(
     return updateDocument(DB_PATHS.USERS, user.uid, {
       name,
       photoURL,
-      phone,
     }).then(() => {
       respMessage = 'Your profile information has been updated.';
       sendNotification(user, true, respTitle, respMessage);
