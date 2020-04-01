@@ -1,17 +1,25 @@
 # SENG 513 - Winter 2020 - Final Project
 
+## Group 12, Eventica
+
+### Back End application
+
+- GitHub: [https://github.com/satyakig/SENG-513-BackEnd](https://github.com/satyakig/SENG-513-BackEnd)
+- Deployed Project: [https://seng-513.appspot.com/](https://seng-513.appspot.com/)
+
 ## Setup
 
 - Install NodeJS v12 from https://nodejs.org/en/download/releases/
-- Clone the repo
-- Run `npm ci` to install all the dependencies
-- Run `npm start` to start the application locally
+- Clone the GitHub repo
+- Run `npm ci` or `npm install` to install all the dependencies
+- Run `npm run watch` to start the application locally
 - Application will start on `https://localhost:3001`
 
 ### IDE Integration
 
 1. WebStorm: https://prettier.io/docs/en/webstorm.html
 2. VSCode: Install the `eslint` and `prettier` plugins. Add these configurations to your settings
+
    ```
    "editor.formatOnSave": true,
    "eslint.format.enable": true,
@@ -19,7 +27,7 @@
        "source.fixAll.eslint": true
    },
    ```
-   
+
 ## Available Scripts
 
 In the project directory, you can run:
