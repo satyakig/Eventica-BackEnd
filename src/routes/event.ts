@@ -13,7 +13,6 @@ import {
 import { addToCollection, DB_PATHS, setDocument, updateDocument } from '../lib/DBHelper';
 import { sanitizeString } from '../lib/DataValidator';
 import { sendNotification } from '../lib/NotificationHelper';
-import { getEventData } from '../lib/UserEventHelper';
 
 const router = Router();
 
@@ -138,56 +137,6 @@ router.patch(
 
     return updateDocument(DB_PATHS.EVENTS, eid, event).then(() => {
       respMessage = `${event.name} has been updated.`;
-      sendNotification(user, true, respTitle, respMessage);
-      return res.status(200).send(respMessage);
-    });
-  }),
-);
-
-/**
- * Delete Event
- * Sample JSON PATCH
- {
-    "eid": "8UhyXDgfoBAJBboJkMQQ"
- }
- */
-router.delete(
-  '/',
-  asyncHandler(async (req, res, next) => {
-    const respTitle = 'Event Cancel';
-    let respMessage = '';
-    const eid = sanitizeString(req.body.eid);
-    const user = await getUserFromRequest(req);
-
-    try {
-      await validateHost(eid, user);
-    } catch (err) {
-      respMessage = err.message;
-      sendNotification(user, false, respTitle, respMessage);
-      return next(httpErrors(400, respMessage));
-    }
-
-    let eventData: any;
-
-    try {
-      eventData = await getEventData(eid);
-    } catch (err) {
-      respMessage = err.message;
-      sendNotification(user, false, respTitle, respMessage);
-      return next(httpErrors(400, respMessage));
-    }
-
-    if (eventData.end < moment().valueOf()) {
-      respMessage = 'Cannot cancel an event that has already completed.';
-      sendNotification(user, false, respTitle, respMessage);
-      return next(httpErrors(400, respMessage));
-    }
-
-    return updateDocument(DB_PATHS.EVENTS, eid, {
-      status: EVENT_STATUS.CANCELLED,
-      lastUpdated: moment().valueOf(),
-    }).then(() => {
-      respMessage = 'Event has been cancelled.';
       sendNotification(user, true, respTitle, respMessage);
       return res.status(200).send(respMessage);
     });
