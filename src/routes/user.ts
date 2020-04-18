@@ -19,7 +19,6 @@ function eventsHosted(user: any) {
       for (const doc of snapshot.docs) {
         updateDocument(DB_PATHS.EVENTS, doc.id, {
           createdBy: {
-            email: user.email,
             name: user.name,
           },
         });
@@ -36,7 +35,6 @@ function commentsMade(user: any) {
       for (const doc of snapshot.docs) {
         updateDocument(DB_PATHS.EVENT_COMMENTS, doc.id, {
           createdBy: {
-            email: user.email,
             name: user.name,
             profile: user.photoURL,
           },
@@ -53,10 +51,8 @@ function eventUsers(user: any) {
     .then((snapshot) => {
       for (const doc of snapshot.docs) {
         updateDocument(DB_PATHS.EVENT_USERS, doc.id, {
-          createdBy: {
-            name: user.name,
-            photoURL: user.photoURL,
-          },
+          name: user.name,
+          photoURL: user.photoURL,
         });
       }
     });
