@@ -9,9 +9,10 @@
 
 ## Setup
 
-- Install NodeJS v12 from https://nodejs.org/en/download/releases/
+- Install NodeJS v12 from [https://nodejs.org/en/download/releases/](https://nodejs.org/en/download/releases/)
 - Clone the GitHub repo
-- Run `npm ci` or `npm install` to install all the dependencies
+- Use a terminal and navigate to the project root directory
+- Run `npm install` or `npm ci` to install the project dependencies
 - Run `npm run watch` to start the application locally
 - Application will start on `https://localhost:3001`
 
