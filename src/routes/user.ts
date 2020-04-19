@@ -102,7 +102,7 @@ router.patch(
       name,
       photoURL,
     }).then(() => {
-      respMessage = 'Your profile information has been updated.';
+      respMessage = 'Your profile has been updated.';
       sendNotification(user, true, respTitle, respMessage);
       return res.status(200).send(respMessage);
     });
