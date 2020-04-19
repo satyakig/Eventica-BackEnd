@@ -75,12 +75,9 @@ export async function verifyUserInEvent(eid: string, uid: string) {
 }
 
 export async function checkinUser(userEvent: any) {
-  const updateResults = await updateDocument(DB_PATHS.EVENT_USERS, userEvent.id, {
+  await updateDocument(DB_PATHS.EVENT_USERS, userEvent.id, {
     checkedIn: true,
   });
-  if (!updateResults) {
-    throw new Error('Error checking in user');
-  }
 }
 
 export function getStringFromStatus(status: number) {
