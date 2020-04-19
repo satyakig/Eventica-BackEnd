@@ -88,23 +88,23 @@ router.post(
         sendNotification(user, true, respTitle, respMessage);
         return res.status(200).send(respMessage);
       });
+    } else {
+      // Else create a new one
+      return addToCollection(DB_PATHS.EVENT_USERS, {
+        eid,
+        uid: user.uid,
+        status,
+        name: user.name,
+        photoURL: user.photoURL,
+        paid: status === USER_EVENT_STATUS.ATTENDING,
+        fee: event.fee,
+        checkedIn: false,
+      }).then(() => {
+        respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
+        sendNotification(user, true, respTitle, respMessage);
+        return res.status(200).send(respMessage);
+      });
     }
-
-    // Else create a new one
-    return addToCollection(DB_PATHS.EVENT_USERS, {
-      eid,
-      uid: user.uid,
-      status,
-      name: user.name,
-      photoURL: user.photoURL,
-      paid: status === USER_EVENT_STATUS.ATTENDING,
-      fee: event.fee,
-      checkedIn: false,
-    }).then(() => {
-      respMessage = `You have RSVPed to ${event.name} with: ${getStringFromStatus(status)}`;
-      sendNotification(user, true, respTitle, respMessage);
-      return res.status(200).send(respMessage);
-    });
   }),
 );
 
