@@ -1,4 +1,4 @@
-# SENG 513 - Winter 2020 - Final Project
+# Web Based Systems - Winter 2020 - Final Project
 
 ## Group 12, Eventica
 
