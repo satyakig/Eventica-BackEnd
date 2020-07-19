@@ -35,7 +35,7 @@
     "express-async-handler": "1.1.4",
     "firebase-admin": "8.10.0",
     "http-errors": "1.7.3",
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "moment": "2.24.0",
     "morgan": "1.10.0",
     "shelljs": "0.8.3",
