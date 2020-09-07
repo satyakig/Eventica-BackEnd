@@ -1,5 +1,7 @@
 # Web Based Systems - Winter 2020 - Final Project
 
+## [Project Report](https://docs.google.com/document/d/1l7bXvkRC3NFzyStApIhbv9nPwpSg-NCR0v-oHzzfA9U/edit?usp=sharing)
+
 ## Group 12, Eventica
 
 ### Back End application
