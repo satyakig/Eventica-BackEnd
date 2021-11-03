@@ -39,7 +39,7 @@
     "moment": "2.24.0",
     "morgan": "1.10.0",
     "shelljs": "0.8.3",
-    "validator": "13.0.0"
+    "validator": "13.7.0"
   },
   "devDependencies": {
     "@types/bunyan": "1.8.6",
